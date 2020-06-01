@@ -1,5 +1,6 @@
 from django.urls import reverse
 from django.conf import settings
+from django.contrib.sites.shortcuts import get_current_site
 from rest_framework import fields, serializers
 from .settings import apibase_settings
 import traceback
@@ -12,12 +13,17 @@ def to_urn(instance, service=None, nid=None):
     return f"urn:{nid}:{service}:{instance._meta.app_label}:{instance._meta.model_name}:{instance.pk}"
 
 
-def endpoint_from_urn(urn, domain=None, scheme='https', nid=None, prefix='/api/rest'):
+def endpoint_from_urn(urn, domain=None, nid=None, prefix='/api/rest', request=None):
     nid = nid or apibase_settings.URN_NID
-    domain = domain or  apibase_settings.DOMAIN
+    domain = domain or apibase_settings.DOMAIN or get_current_site(request).domain
     ma = re.findall(r"([^:]+)", urn)
     if len(ma) == 6 and ma[0] == 'urn' and ma[1] == nid:
-        return f"{scheme}://{ma[2]}.{domain}{prefix}/{ma[3]}/{ma[4]}/{ma[5]}/"
+        if ma[2] == 'self':
+            service = ''
+        else:
+            _, domain = re.search(r'(?:([^\.]+)\.)?(.+)', domain).groups()
+            service = ma[2] + "."
+        return f"{apibase_settings.SCHEME}://{service}{domain}{prefix}/{ma[3]}/{ma[4]}/{ma[5]}/"
     return None
 
 

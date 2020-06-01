@@ -3,9 +3,10 @@ from .settings import Settings
 
 # True means this parameter is to be imported.
 PARAMS = (
-    ('URN_NID', (False, 'myservice')),
-    ('HOST', (False, 'www')),
-    ('DOMAIN', (False, 'local')),
+    ('URN_NID', (False, 'x-nid')),
+    ('HOST', (False, 'self')),
+    ('DOMAIN', (False, None)),
+    ('SCHEME', (False, 'https')),
 )
 
 apibase_settings = Settings(
