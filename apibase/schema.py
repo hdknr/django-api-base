@@ -1,6 +1,7 @@
 import graphene.relay
 # https://docs.graphene-python.org/projects/django/en/latest/queries/
 from . import serializers
+from graphene_django.filter import DjangoFilterConnectionField
 
 
 class NodeMixin(object):
@@ -25,3 +26,22 @@ class NodeMixin(object):
             return queryset.get(pk=id)
         except cls._meta.model.DoesNotExist:
             return None
+
+
+class NodeSet(DjangoFilterConnectionField):
+    # https://github.com/graphql-python/graphene-django/issues/320#issuecomment-404802724
+
+    @property
+    def type(self):
+
+        class NodeSetConnection(graphene.Connection):
+            total_count = graphene.Int()
+
+            class Meta:
+                node = self._type
+                name = '{}NodeSetConnection'.format(self._type._meta.name)
+
+            def resolve_total_count(self, info, **kwargs):
+                return self.iterable.count()
+
+        return NodeSetConnection
