@@ -2,10 +2,16 @@
 https://django-filter.readthedocs.io/en/master/
 '''
 import django_filters
-from django.db.models import Q
+from django import forms
+from django.db.models import Q, IntegerField
 from functools import reduce
 import operator
 import re
+
+
+
+class IntFilter(django_filters.NumberFilter):
+    field_class = forms.IntegerField
 
 
 class WordFilter(django_filters.CharFilter):
@@ -32,6 +38,18 @@ class WordFilter(django_filters.CharFilter):
 
 class BaseFilter(django_filters.FilterSet):
     pk = django_filters.NumberFilter(field_name='id')
+
+    @classmethod
+    def filter_for_lookup(cls, field, lookup_type):
+        filter_class, param = super().filter_for_lookup(field, lookup_type)
+
+        if lookup_type == 'exact' and filter_class == django_filters.ChoiceFilter:
+            if isinstance(field, IntegerField):
+                # print(field)
+                filter_class = IntFilter
+                param = {}
+
+        return filter_class, param 
 
     def filter_int(self, queryset, name, value):
         q = {name: int(round(value))}
