@@ -2,14 +2,9 @@ import graphene.relay
 # https://docs.graphene-python.org/projects/django/en/latest/queries/
 from . import serializers
 from graphene_django.filter import DjangoFilterConnectionField
-from graphene_django.utils import maybe_queryset
-from django.db.models.query import QuerySet
 
 from graphene.relay.connection import PageInfo
-# from graphql_relay import connection_from_list
-from graphql_relay.connection.arrayconnection import connection_from_list_slice, get_offset_with_default
-from functools import partial
-from collections.abc import Iterable
+from graphql_relay.connection.arrayconnection import get_offset_with_default
 
 
 class NodeMixin(object):
