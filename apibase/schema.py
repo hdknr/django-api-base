@@ -31,19 +31,6 @@ class NodeMixin(object):
             return None
 
 
-def connection_adapter(cls, edges, pageInfo):
-    """Adapter for creating Connection instances"""
-    return cls(edges=edges, page_info=pageInfo)
-
-def page_info_adapter(startCursor, endCursor, hasPreviousPage, hasNextPage):
-    """Adapter for creating PageInfo instances"""
-    return PageInfo(
-        start_cursor=startCursor,
-        end_cursor=endCursor,
-        has_previous_page=hasPreviousPage,
-        has_next_page=hasNextPage,
-    )
-
 def resolve_start_offset(slice_start, after):
     after_offset = get_offset_with_default(after, -1)
     return  max(slice_start - 1, after_offset, -1) + 1
