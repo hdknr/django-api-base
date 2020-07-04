@@ -1,10 +1,7 @@
 import graphene.relay
 # https://docs.graphene-python.org/projects/django/en/latest/queries/
-from . import serializers
 from graphene_django.filter import DjangoFilterConnectionField
-
-from graphene.relay.connection import PageInfo
-from graphql_relay.connection.arrayconnection import get_offset_with_default
+from . import serializers, filters, utils
 
 
 class NodeMixin(object):
@@ -31,9 +28,6 @@ class NodeMixin(object):
             return None
 
 
-def resolve_start_offset(slice_start, after):
-    after_offset = get_offset_with_default(after, -1)
-    return  max(slice_start - 1, after_offset, -1) + 1
 
 class NodeSet(DjangoFilterConnectionField):
     # https://github.com/graphql-python/graphene-django/issues/320#issuecomment-404802724
@@ -54,7 +48,6 @@ class NodeSet(DjangoFilterConnectionField):
 
         return NodeSetConnection
 
-
     @classmethod
     def resolve_connection(cls, connection, args, iterable):
         # connectioon: NodeSetConnection
@@ -63,7 +56,17 @@ class NodeSet(DjangoFilterConnectionField):
 
         connection = super().resolve_connection(connection, args, iterable)
 
-        start_offset = resolve_start_offset(0, args.get('after'))
+        start_offset = utils.resolve_start_offset(0, args.get('after'))
         connection.page_info.has_previous_page = (start_offset > 0)
 
         return connection
+
+    obvious_filters = [
+        filters.IntFilter,
+    ]
+
+    @property
+    def filtering_args(self):
+        return utils.get_filtering_args_from_filterset(
+            self.filterset_class, self.node_type, 
+            obvious_filters=self.obvious_filters)
