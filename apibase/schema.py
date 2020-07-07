@@ -54,7 +54,7 @@ class NodeSet(DjangoFilterConnectionField):
         # args: GraphQL Query
         # iterable: QuerySet
 
-        connection = super().resolve_connection(connection, args, iterable)
+        connection = super().resolve_connection(connection, args, iterable, *nargs, **kwargs)
 
         start_offset = utils.resolve_start_offset(0, args.get('after'))
         connection.page_info.has_previous_page = (start_offset > 0)
