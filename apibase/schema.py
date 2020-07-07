@@ -49,7 +49,7 @@ class NodeSet(DjangoFilterConnectionField):
         return NodeSetConnection
 
     @classmethod
-    def resolve_connection(cls, connection, args, iterable):
+    def resolve_connection(cls, connection, args, iterable, *nargs, **kwargs):
         # connectioon: NodeSetConnection
         # args: GraphQL Query
         # iterable: QuerySet
