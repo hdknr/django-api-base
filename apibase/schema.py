@@ -1,6 +1,7 @@
 import graphene.relay
 # https://docs.graphene-python.org/projects/django/en/latest/queries/
 from graphene_django.filter import DjangoFilterConnectionField
+from django.db.models import QuerySet
 from . import serializers, filters, utils
 
 
@@ -37,13 +38,20 @@ class NodeSet(DjangoFilterConnectionField):
 
         class NodeSetConnection(graphene.Connection):
             total_count = graphene.Int()
+            records = graphene.Int()
 
             class Meta:
                 node = self._type
                 name = '{}NodeSetConnection'.format(self._type._meta.name)
 
             def resolve_total_count(self, info, **kwargs):
-                # return self.iterable.count()
+                return self.length
+
+            def resolve_records(self, info, **kwargs):
+                if isinstance(self.iterable, QuerySet):
+                    # TODO: each models may have it own countable criteria
+                    return self.iterable.model.objects.count()
+
                 return self.length
 
         return NodeSetConnection
