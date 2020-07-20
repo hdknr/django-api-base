@@ -1,6 +1,8 @@
 import graphene.relay
 # https://docs.graphene-python.org/projects/django/en/latest/queries/
 from graphene_django.filter import DjangoFilterConnectionField
+from graphene_django.rest_framework.mutation import SerializerMutation
+from graphql_relay import from_global_id
 from django.db.models import QuerySet
 from . import serializers, filters, utils
 
@@ -78,3 +80,16 @@ class NodeSet(DjangoFilterConnectionField):
         return utils.get_filtering_args_from_filterset(
             self.filterset_class, self.node_type, 
             obvious_filters=self.obvious_filters)
+
+
+class BaseSerializerMutation(SerializerMutation):
+    class Meta:
+        abstract = True
+
+    @classmethod
+    def get_serializer_kwargs(cls, root, info, **input):
+        client_mutation_id = input.get('client_mutation_id', None) 
+        if isinstance(client_mutation_id, str):
+            _, id = from_global_id(client_mutation_id)
+            input['id'] = id
+        return super().get_serializer_kwargs(root, info, **input)
