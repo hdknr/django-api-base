@@ -3,8 +3,17 @@ import graphene.relay
 from graphene_django.filter import DjangoFilterConnectionField
 from graphene_django.rest_framework.mutation import SerializerMutation
 from graphql_relay import from_global_id
+from graphene.types import resolver
 from django.db.models import QuerySet
 from . import serializers, filters, utils
+
+
+def default_resolver(attname, default_value, root, info, **args):
+    '''root: model instance, info:graphql.execution.base.ResolveInfo'''
+    res = resolver.default_resolver(attname, default_value, root, info, **args)
+    if hasattr(info.parent_type.graphene_type, 'patch_result'):
+        return info.parent_type.graphene_type.patch_result(res, attname, default_value, root, info, **args) 
+    return res
 
 
 class NodeMixin(object):
