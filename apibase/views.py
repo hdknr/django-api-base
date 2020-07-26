@@ -26,6 +26,7 @@ class DRFAuthenticatedGraphQLView(views.GraphQLView):
 
 
 @_decorate
-def dsl(request):
+def sdl(request):
+    '''GraphQL Schema Definition Language (SDL). '''
     schema_str = schema_printer.print_schema(settings.graphene_settings.SCHEMA)
     return HttpResponse(schema_str, content_type='text/plain')
