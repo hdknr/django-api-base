@@ -74,6 +74,12 @@ class UrnField(fields.Field):
 class BaseModelSerializer(serializers.ModelSerializer):
     endpoint = EndpointField()
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if hasattr(self, 'patch_result'):
+            self.patch_result(instance, data)
+        return data
+
 
 class UrnModelSerializer(BaseModelSerializer):
     urn = UrnField()
