@@ -34,6 +34,9 @@ class Permission(permissions.IsAuthenticated):
         return info.context.user.has_perm(cls.PERM_CODE)
 
     def has_permission(self, request, view):
+        if not request.user:
+            return False
+
         isvalid = False if self.PRIVATE else (request.method in permissions.SAFE_METHODS)
         isvalid = isvalid or request.user.has_perm(self.PERM_CODE)
         if not isvalid:
