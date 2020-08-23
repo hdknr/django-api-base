@@ -72,13 +72,50 @@ class UrnField(fields.Field):
 
 
 class BaseModelSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)
     endpoint = EndpointField()
+
+    nested_fields = []
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
         if hasattr(self, 'patch_result'):
             self.patch_result(instance, data)
         return data
+
+    @classmethod
+    def update_or_create(cls, partial=None, id=None, **validated_data):
+        instance = id and cls.Meta.model.objects.filter(id=id).first()
+        serializer = cls(instance=instance, data=validated_data, partial=partial)
+        serializer.is_valid() and serializer.save()
+
+    def update_nested(self, instance, validated_data, field_name, children):
+        related_field = self.Meta.model._meta.get_field(field_name[:-len('_set')])
+        remote_field_name = related_field.remote_field.name
+        ser = self.fields[field_name].child
+
+        for item in children:
+            item[remote_field_name] = instance.id
+            ser.update_or_create(partial=self.partial, **item) 
+
+    def update_nested_fields(self, instance, validated_data, children_set):
+        for field_name, children in children_set.items():
+            self.update_nested(instance, validated_data, field_name, children)
+
+    def validated_children_set(self, validated_data):
+        children_set = dict((i, validated_data.pop(i, [])) for i in self.nested_fields)
+        return children_set
+
+    def update(self, instance, validated_data):
+        children_set = self.validated_children_set(validated_data)
+        self.update_nested_fields(instance, validated_data, children_set)
+        return super().update(instance, validated_data)
+
+    def create(self, validated_data):
+        children_set = self.validated_children_set(validated_data)
+        instance = super().create(validated_data)
+        self.update_nested_fields(instance, validated_data, children_set)
+        return instance
 
 
 class UrnModelSerializer(BaseModelSerializer):
