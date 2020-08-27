@@ -1,5 +1,6 @@
 from django.urls import reverse
 from django.conf import settings
+from django.db.models import Model
 from django.contrib.sites.shortcuts import get_current_site
 from rest_framework import fields, serializers
 from .settings import apibase_settings
@@ -96,6 +97,10 @@ class BaseModelSerializer(serializers.ModelSerializer):
 
         for item in children:
             item[remote_field_name] = instance.id
+            for key in item:
+                if isinstance(item[key], Model):
+                    # prevent serilizer.is_valid() -> False
+                    item[key] = item[key].id
             ser.update_or_create(partial=self.partial, **item) 
 
     def update_nested_fields(self, instance, validated_data, children_set):
