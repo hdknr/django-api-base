@@ -1,6 +1,7 @@
 import six
 
 from django_filters.utils import get_model_field
+from django_filters.filters import RangeFilter 
 from graphene_django.forms.converter import convert_form_field
 from graphql_relay.connection.arrayconnection import get_offset_with_default
 
@@ -39,7 +40,15 @@ def get_filtering_args_from_filterset(filterset_class, type, obvious_filters=[])
 
         field_type = convert_form_field(form_field).Argument()
         field_type.description = filter_field.label
-        args[name] = field_type
+
+        # For RangeFilter, duplicate filter args for suffixes
+        if isinstance(filter_field, RangeFilter) and hasattr(filter_field.field, 'widget'):
+            suffixes = getattr(filter_field.field.widget, 'suffixes', []) 
+            for s in suffixes:
+                if s: 
+                    args[f"{name}_{s}"] = field_type
+        else:
+            args[name] = field_type
 
     return args
 
