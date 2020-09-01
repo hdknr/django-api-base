@@ -4,6 +4,7 @@ from django_filters.utils import get_model_field
 from django_filters.filters import RangeFilter 
 from graphene_django.forms.converter import convert_form_field
 from graphql_relay.connection.arrayconnection import get_offset_with_default
+from gql import gql, Client
 
 
 def get_filtering_args_from_filterset(filterset_class, type, obvious_filters=[]):
@@ -56,3 +57,9 @@ def get_filtering_args_from_filterset(filterset_class, type, obvious_filters=[])
 def resolve_start_offset(slice_start, after):
     after_offset = get_offset_with_default(after, -1)
     return  max(slice_start - 1, after_offset, -1) + 1
+
+
+def gql_query(schema, query_str, **params):
+    client = Client(schema=schema)
+    query = gql(query_str)
+    return client.execute(query, variable_values=params)
