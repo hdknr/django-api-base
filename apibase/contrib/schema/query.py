@@ -1,0 +1,54 @@
+import graphene
+import graphene.relay
+from graphene_django.types import DjangoObjectType
+
+from apibase.schema import NodeMixin, NodeSet
+from .. import models
+from . import filters
+
+
+class User(NodeMixin, DjangoObjectType):
+    class Meta:
+        model = models.User
+        filterset_class = filters.UserFilter
+        interfaces = (graphene.Node, )
+        convert_choices_to_enum = False
+
+
+class Group(NodeMixin, DjangoObjectType):
+    class Meta:
+        model = models.Group
+        filterset_class = filters.GroupFilter
+        interfaces = (graphene.Node, )
+        convert_choices_to_enum = False
+
+
+class Permission(NodeMixin, DjangoObjectType):
+    class Meta:
+        model = models.Permission
+        filterset_class = filters.PermissionFilter
+        interfaces = (graphene.Node, )
+        convert_choices_to_enum = False
+
+
+class ContentType(NodeMixin, DjangoObjectType):
+    class Meta:
+        model = models.ContentType
+        filterset_class = filters.ContentTypeFilter
+        interfaces = (graphene.Node, )
+        convert_choices_to_enum = False
+
+
+class Query(graphene.ObjectType):
+
+    user = graphene.relay.Node.Field(User)
+    user_set = NodeSet(User)
+
+    group = graphene.relay.Node.Field(Group)
+    group_set = NodeSet(Group)
+
+    permission = graphene.relay.Node.Field(Permission)
+    permission_set = NodeSet(Permission)
+
+    contenttype = graphene.relay.Node.Field(ContentType)
+    contenttype_set = NodeSet(ContentType)

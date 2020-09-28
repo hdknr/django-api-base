@@ -1,5 +1,4 @@
-from rest_framework import (
-    viewsets, response, decorators, status)
+from rest_framework import (viewsets, decorators, status)
 from rest_framework.response import Response
 from .paginations import Pagination
 

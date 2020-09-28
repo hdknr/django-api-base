@@ -1,10 +1,8 @@
 from django.urls import reverse
-from django.conf import settings
 from django.db.models import Model
 from django.contrib.sites.shortcuts import get_current_site
 from rest_framework import fields, serializers
 from .settings import apibase_settings
-import traceback
 import re
 
 
@@ -16,7 +14,8 @@ def to_urn(instance, service=None, nid=None):
 
 def endpoint_from_urn(urn, domain=None, nid=None, prefix='/api/rest', request=None):
     nid = nid or apibase_settings.URN_NID
-    domain = domain or apibase_settings.DOMAIN or get_current_site(request).domain
+    domain = domain or apibase_settings.DOMAIN or get_current_site(
+        request).domain
     ma = re.findall(r"([^:]+)", urn)
     if len(ma) == 6 and ma[0] == 'urn' and ma[1] == nid:
         if ma[2] == 'self':
@@ -47,16 +46,17 @@ class EndpointField(fields.Field):
         kwargs['read_only'] = True
         self.url_name = kwargs.get('url_name', None)
         self.attr_name = kwargs.get('attr_name', None)
-        super().__init__(**kwargs) 
+        super().__init__(**kwargs)
 
     def get_url_name(self, value):
         return self.url_name
 
     def to_representation(self, value):
-        instance = self.attr_name and getattr(value, self.attr_name, None) or value
+        instance = self.attr_name and getattr(
+            value, self.attr_name, None) or value
         url = drf_endpoint(instance, url_name=self.get_url_name(value))
         request = self.context.get('request', None)
-        return (request and url ) and request.build_absolute_uri(url) or url or None
+        return (request and url) and request.build_absolute_uri(url) or url or None
 
 
 class UrnField(fields.Field):
@@ -65,10 +65,11 @@ class UrnField(fields.Field):
         kwargs['source'] = '*'
         kwargs['read_only'] = True
         self.attr_name = kwargs.get('attr_name', None)
-        super().__init__(**kwargs) 
+        super().__init__(**kwargs)
 
     def to_representation(self, value):
-        instance = self.attr_name and getattr(value, self.attr_name, None) or value
+        instance = self.attr_name and getattr(
+            value, self.attr_name, None) or value
         return to_urn(instance)
 
 
@@ -87,11 +88,13 @@ class BaseModelSerializer(serializers.ModelSerializer):
     @classmethod
     def update_or_create(cls, partial=None, id=None, **validated_data):
         instance = id and cls.Meta.model.objects.filter(id=id).first()
-        serializer = cls(instance=instance, data=validated_data, partial=partial)
+        serializer = cls(instance=instance,
+                         data=validated_data, partial=partial)
         serializer.is_valid() and serializer.save()
 
     def update_nested(self, instance, validated_data, field_name, children):
-        related_field = self.Meta.model._meta.get_field(field_name[:-len('_set')])
+        related_field = self.Meta.model._meta.get_field(
+            field_name[:-len('_set')])
         remote_field_name = related_field.remote_field.name
         ser = self.fields[field_name].child
 
@@ -101,14 +104,15 @@ class BaseModelSerializer(serializers.ModelSerializer):
                 if isinstance(item[key], Model):
                     # prevent serilizer.is_valid() -> False
                     item[key] = item[key].id
-            ser.update_or_create(partial=self.partial, **item) 
+            ser.update_or_create(partial=self.partial, **item)
 
     def update_nested_fields(self, instance, validated_data, children_set):
         for field_name, children in children_set.items():
             self.update_nested(instance, validated_data, field_name, children)
 
     def validated_children_set(self, validated_data):
-        children_set = dict((i, validated_data.pop(i, [])) for i in self.nested_fields)
+        children_set = dict((i, validated_data.pop(i, []))
+                            for i in self.nested_fields)
         return children_set
 
     def update(self, instance, validated_data):
