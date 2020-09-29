@@ -9,7 +9,6 @@ import operator
 import re
 
 
-
 class IntFilter(django_filters.NumberFilter):
     field_class = forms.IntegerField
 
@@ -27,7 +26,8 @@ class WordFilter(django_filters.CharFilter):
 
         vals = re.split(self.delimiters, value)
         query = [
-            reduce(operator.or_, [Q((f'{i}__contains', v)) for i in self.lookups])
+            reduce(operator.or_, [Q((f'{i}__contains', v))
+                                  for i in self.lookups])
             for v in vals if v]
 
         qs = qs.filter(*query)
@@ -49,7 +49,7 @@ class BaseFilter(django_filters.FilterSet):
                 filter_class = IntFilter
                 param = {}
 
-        return filter_class, param 
+        return filter_class, param
 
     def filter_int(self, queryset, name, value):
         q = {name: int(round(value))}
