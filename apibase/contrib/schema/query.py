@@ -4,15 +4,21 @@ from graphene_django.types import DjangoObjectType
 
 from apibase.schema import NodeMixin, NodeSet
 from .. import models
+from ..models.methods import all_permissions
 from . import filters
 
 
 class User(NodeMixin, DjangoObjectType):
+    permissions = graphene.List(graphene.String)
+
     class Meta:
         model = models.User
         filterset_class = filters.UserFilter
         interfaces = (graphene.Node, )
         convert_choices_to_enum = False
+
+    def resolve_permissions(root, info):
+        return all_permissions(root)
 
 
 class Group(NodeMixin, DjangoObjectType):
