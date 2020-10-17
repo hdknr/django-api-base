@@ -73,10 +73,25 @@ class UrnField(fields.Field):
         return to_urn(instance)
 
 
+class DisplayField(fields.Field):
+
+    def __init__(self, **kwargs):
+        kwargs['source'] = '*'
+        kwargs['read_only'] = True
+        self.attr_name = kwargs.get('attr_name', None)
+        super().__init__(**kwargs)
+
+    def to_representation(self, value):
+        instance = self.attr_name and getattr(
+            value, self.attr_name, None) or value
+        return str(instance)
+
+
 class BaseModelSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
     endpoint = EndpointField()
     urn = UrnField()
+    display = DisplayField()
 
     nested_fields = []
 
