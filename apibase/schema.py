@@ -21,6 +21,7 @@ class NodeMixin(object):
 
     pk = graphene.Int()
     endpoint = graphene.String()
+    urn = graphene.String()
 
     def resolve_pk(self, info):
         return self.pk
@@ -30,6 +31,9 @@ class NodeMixin(object):
         if hasattr(info.context, 'build_absolute_uri'):
             return info.context.build_absolute_uri(path)
         return path
+
+    def resolve_urn(self, info):
+        return serializers.to_urn(self)
 
     @classmethod
     def get_node(cls, info, id):

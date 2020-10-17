@@ -6,10 +6,10 @@ from .settings import apibase_settings
 import re
 
 
-def to_urn(instance, service=None, nid=None):
+def to_urn(instance, nss=None, nid=None):
     nid = nid or apibase_settings.URN_NID
-    service = service or apibase_settings.HOST
-    return f"urn:{nid}:{service}:{instance._meta.app_label}:{instance._meta.model_name}:{instance.pk}"
+    nss = nss or apibase_settings.URN_NSS
+    return f"urn:{nid}:{nss}:{instance._meta.app_label}:{instance._meta.model_name}:{instance.pk}"
 
 
 def endpoint_from_urn(urn, domain=None, nid=None, prefix='/api/rest', request=None):
@@ -76,6 +76,7 @@ class UrnField(fields.Field):
 class BaseModelSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
     endpoint = EndpointField()
+    urn = UrnField()
 
     nested_fields = []
 
