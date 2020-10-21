@@ -5,7 +5,18 @@ from graphene_django.rest_framework.mutation import SerializerMutation
 from graphql_relay import from_global_id
 from graphene.types import resolver, generic
 from django.db.models import QuerySet
+import decimal
+from django.core.serializers.json import DjangoJSONEncoder
 from . import serializers, filters, utils
+import json
+
+
+class JSONEncode(DjangoJSONEncoder):
+    def default(self, o):
+        if isinstance(o, (decimal.Decimal)):
+            return float(o)
+
+        return super().default(o)
 
 
 def default_resolver(attname, default_value, root, info, **args):
@@ -68,7 +79,8 @@ class NodeSet(DjangoFilterConnectionField):
 
             def resolve_summary(self, info, **kwargs):
                 if isinstance(self.iterable, QuerySet) and hasattr(self.iterable, 'summary'):
-                    return self.iterable.summary()
+                    data = json.dumps(self.iterable.summary(), cls=JSONEncode)
+                    return json.loads(data)
                 return None
 
             def resolve_records(self, info, **kwargs):
