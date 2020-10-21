@@ -1,5 +1,6 @@
 from django.urls import reverse
 from django.db.models import Model
+from django.db.models.fields.reverse_related import OneToOneRel
 from django.contrib.sites.shortcuts import get_current_site
 from rest_framework import fields, serializers
 from .settings import apibase_settings
@@ -106,13 +107,21 @@ class BaseModelSerializer(serializers.ModelSerializer):
         instance = id and cls.Meta.model.objects.filter(id=id).first()
         serializer = cls(instance=instance,
                          data=validated_data, partial=partial)
-        serializer.is_valid() and serializer.save()
+        if serializer.is_valid():
+            serializer.save()
 
     def update_nested(self, instance, validated_data, field_name, children):
-        related_field = self.Meta.model._meta.get_field(
-            field_name[:-len('_set')])
+        if not children or not instance:
+            return
+
+        name = re.sub(r'(.+)(_set)$', r'\g<1>', field_name)
+        related_field = self.Meta.model._meta.get_field(name)
         remote_field_name = related_field.remote_field.name
-        ser = self.fields[field_name].child
+        if isinstance(related_field, OneToOneRel):
+            children = [children]
+            ser = self.fields[field_name]
+        else:
+            ser = self.fields[field_name].child
 
         for item in children:
             item[remote_field_name] = instance.id
