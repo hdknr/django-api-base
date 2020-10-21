@@ -3,7 +3,7 @@ import graphene.relay
 from graphene_django.filter import DjangoFilterConnectionField
 from graphene_django.rest_framework.mutation import SerializerMutation
 from graphql_relay import from_global_id
-from graphene.types import resolver
+from graphene.types import resolver, generic
 from django.db.models import QuerySet
 from . import serializers, filters, utils
 
@@ -57,6 +57,7 @@ class NodeSet(DjangoFilterConnectionField):
         class NodeSetConnection(graphene.Connection):
             total_count = graphene.Int()
             records = graphene.Int()
+            summary = generic.GenericScalar()
 
             class Meta:
                 node = self._type
@@ -64,6 +65,11 @@ class NodeSet(DjangoFilterConnectionField):
 
             def resolve_total_count(self, info, **kwargs):
                 return self.length
+
+            def resolve_summary(self, info, **kwargs):
+                if isinstance(self.iterable, QuerySet) and hasattr(self.iterable, 'summary'):
+                    return self.iterable.summary()
+                return None
 
             def resolve_records(self, info, **kwargs):
                 if isinstance(self.iterable, QuerySet):
