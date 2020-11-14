@@ -7,7 +7,7 @@ from django.db.models import Q, IntegerField
 from functools import reduce
 import operator
 import re
-
+import jaconv
 
 class IntFilter(django_filters.NumberFilter):
     field_class = forms.IntegerField
@@ -25,6 +25,7 @@ class WordFilter(django_filters.CharFilter):
             return qs
 
         vals = re.split(self.delimiters, value)
+        vals = set(vals + [jaconv.zen2han(i) for i in vals])
         query = [
             reduce(operator.or_, [Q((f'{i}__contains', v))
                                   for i in self.lookups])
