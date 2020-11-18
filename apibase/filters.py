@@ -9,6 +9,7 @@ import operator
 import re
 import jaconv
 
+
 class IntFilter(django_filters.NumberFilter):
     field_class = forms.IntegerField
 
@@ -24,11 +25,17 @@ class WordFilter(django_filters.CharFilter):
         if value in django_filters.constants.EMPTY_VALUES:
             return qs
 
+        def _q(lookup, val):
+            key = f'{lookup}__contains'
+            val2 = jaconv.zen2han(val)
+            if val2 == val:
+                return Q((key, val))
+            return Q((key, val)) | Q((key, val2))
+
         vals = re.split(self.delimiters, value)
-        vals = set(vals + [jaconv.zen2han(i) for i in vals])
         query = [
-            reduce(operator.or_, [Q((f'{i}__contains', v))
-                                  for i in self.lookups])
+            reduce(operator.or_,
+                   [_q(i, v) for i in self.lookups])
             for v in vals if v]
 
         qs = qs.filter(*query)
