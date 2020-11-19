@@ -116,12 +116,21 @@ class NodeSet(DjangoFilterConnectionField):
             self.filterset_class, self.node_type,
             obvious_filters=self.obvious_filters)
 
+    @classmethod
+    def resolve_queryset(
+        cls, connection, iterable, info, args, filtering_args, filterset_class
+    ):
+        qs = super().resolve_queryset(
+            connection, iterable, info, args, filtering_args, filterset_class)
+        # duplicated result when related models are filtered
+        return qs.distinct()
+
 
 class BaseSerializerMutation(SerializerMutation):
     class Meta:
         abstract = True
 
-    @classmethod
+    @ classmethod
     def get_serializer_kwargs(cls, root, info, **input):
         client_mutation_id = input.get('client_mutation_id', None)
         if isinstance(client_mutation_id, str):
