@@ -86,7 +86,7 @@ class NodeSet(DjangoFilterConnectionField):
             def resolve_records(self, info, **kwargs):
                 if isinstance(self.iterable, QuerySet):
                     # TODO: each models may have it own countable criteria
-                    return self.iterable.model.objects.count()
+                    return self.iterable.order_by('id').distinct().count()
 
                 return self.length
 
