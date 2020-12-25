@@ -3,6 +3,7 @@ from django.db.models import Model
 from django.db.models.fields.reverse_related import OneToOneRel
 from django.contrib.sites.shortcuts import get_current_site
 from rest_framework import fields, serializers
+from rest_framework.fields import empty
 from .settings import apibase_settings
 import re
 
@@ -97,10 +98,17 @@ class BaseModelSerializer(serializers.ModelSerializer):
     nested_fields = []
 
     def to_representation(self, instance):
+        '''(override)'''
         data = super().to_representation(instance)
         if hasattr(self, 'patch_result'):
             self.patch_result(instance, data)
         return data
+
+    def run_validation(self, data=empty):
+        '''(override)'''
+        self._children_set = dict((i, data.pop(i, None))
+                                  for i in self.nested_fields)
+        return super().run_validation(data=data)
 
     @classmethod
     def update_or_create(cls, partial=None, id=None, **validated_data):
@@ -141,8 +149,9 @@ class BaseModelSerializer(serializers.ModelSerializer):
             self.update_nested(instance, validated_data, field_name, children)
 
     def validated_children_set(self, validated_data):
-        children_set = dict((i, validated_data.pop(i, []))
-                            for i in self.nested_fields)
+        children_set = getattr(self, '_children_set', [])
+        children_set = children_set or \
+            dict((i, validated_data.pop(i, [])) for i in self.nested_fields)
         return children_set
 
     def update(self, instance, validated_data):
