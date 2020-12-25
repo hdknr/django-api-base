@@ -25,7 +25,8 @@ class BaseModelViewSet(viewsets.ModelViewSet):
     def permissions(cls):
         return [
             Permission.objects.filter(
-                **dict(zip(('content_type__app_label', 'codename'), p.PERM_CODE.split('.'))))
+                **dict(zip(('content_type__app_label', 'codename'), p.PERM_CODE.split('.')))
+            ).first()
             for p in cls.permission_classes
             if issubclass(p, permissions.Permission) and p.PERM_CODE
         ]
