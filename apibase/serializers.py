@@ -1,4 +1,5 @@
 from django.urls import reverse
+from django.http import QueryDict
 from django.db.models import Model
 from django.db.models.fields.reverse_related import OneToOneRel
 from django.contrib.sites.shortcuts import get_current_site
@@ -104,10 +105,31 @@ class BaseModelSerializer(serializers.ModelSerializer):
             self.patch_result(instance, data)
         return data
 
+    def run_validation_querydict(self, data=empty):
+        self._children_set = QueryDict(
+            '', mutable=True, encoding=data.encoding)
+        copied = QueryDict(
+            '', mutable=True, encoding=data.encoding)
+
+        for key, value in data.lists():
+            if key in self.nested_fields:
+                self._children_set.setlist(key, value)
+            else:
+                copied.setlist(key, value)
+
+        data = copied
+        return super().run_validation(data=data)
+
     def run_validation(self, data=empty):
         '''(override)'''
-        self._children_set = dict((i, data.pop(i, None))
-                                  for i in self.nested_fields)
+        if self.nested_fields:
+            if isinstance(data, QueryDict):
+                return self.run_validation_querydict(data=data)
+            self._children_set = dict(
+                (i, data.pop(i, None))
+                for i in self.nested_fields
+            )
+
         return super().run_validation(data=data)
 
     @classmethod
@@ -135,6 +157,8 @@ class BaseModelSerializer(serializers.ModelSerializer):
             ser = self.fields[field_name].child
 
         for item in children:
+            if isinstance(item, str):
+                pass
             item[remote_field_name] = instance.id
             for key in item:
                 if isinstance(item[key], Model):
