@@ -45,16 +45,25 @@ class ContentType(NodeMixin, DjangoObjectType):
         convert_choices_to_enum = False
 
 
-class Query(graphene.ObjectType):
-
+class UserQueryMixin:
     user = graphene.relay.Node.Field(User)
     user_set = NodeSet(User)
 
+
+class GroupQueryMixin:
     group = graphene.relay.Node.Field(Group)
     group_set = NodeSet(Group)
 
+
+class PermissionQueryMixin:
     permission = graphene.relay.Node.Field(Permission)
     permission_set = NodeSet(Permission)
 
+
+class ConteTypeQueryMixin:
     contenttype = graphene.relay.Node.Field(ContentType)
     contenttype_set = NodeSet(ContentType)
+
+
+class Query(graphene.ObjectType, UserQueryMixin, GroupQueryMixin, PermissionQueryMixin, ConteTypeQueryMixin):
+    pass
