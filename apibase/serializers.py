@@ -98,6 +98,13 @@ class BaseModelSerializer(serializers.ModelSerializer):
 
     nested_fields = []
 
+    @property
+    def children_set(self):
+        return getattr(self, '_children_set', {})
+
+    def get_children(self, name):
+        return self.children_set.get(name, [])
+
     def to_representation(self, instance):
         '''(override)'''
         data = super().to_representation(instance)
