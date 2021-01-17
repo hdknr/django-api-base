@@ -129,6 +129,9 @@ class BaseModelSerializer(serializers.ModelSerializer):
 
     def run_validation(self, data=empty):
         '''(override)'''
+        if data == empty:
+            return super().run_validation(data=data)
+
         if self.nested_fields:
             if isinstance(data, QueryDict):
                 return self.run_validation_querydict(data=data)
