@@ -7,21 +7,17 @@ from . import paginations, permissions
 class BaseModelViewSet(viewsets.ModelViewSet):
     pagination_class = paginations.Pagination
 
-    def get_serializer(self, *args, **kwargs):
-        if self.action == "batch_create" and self.request.POST:
-            kwargs["many"] = True
-        return super().get_serializer(*args, **kwargs)
-
     @decorators.action(methods=["post"], detail=False)
     def batch_create(self, request, *args, **kwargs):
-        # only 'many=True' is added to super().create()
-        serializer = self.get_serializer(data=request.data, many=True)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data, status=status.HTTP_201_CREATED, headers=headers
-        )
+        if request.method == 'GET':
+            return self.list(request)
+        return self.create(request, many=True)
+
+    @decorators.action(methods=['patch', 'get'], detail=False)
+    def batch_update(self, request):
+        if request.method == 'GET':
+            return self.list(request)
+        return self.update(request, pk=None, many=True, partial=True)
 
     @classmethod
     def permissions(cls):
@@ -36,14 +32,20 @@ class BaseModelViewSet(viewsets.ModelViewSet):
         ]
 
     def update(self, request, *args, **kwargs):
-        """(overrid)"""
+        """(override)"""
         many = kwargs.pop("many", False)
-        if not many:
-            # normal
-            return super().update(request, *args, **kwargs)
+        if many:
+            return self.update_batch(request, *args, **kwargs)
+        return super().update(request, *args, **kwargs)
 
-        # batch update
-        # Serlialier : list_serializer_class = BatchListSerializer
+    def create(self, request, *args, **kwargs):
+        """(override)"""
+        many = kwargs.pop("many", False)
+        if many:
+            return self.create_batch(request, *args, **kwargs)
+        return super().create(request, *args, **kwargs)
+        
+    def update_batch(self, request, *args, **kwargs):
         partial = kwargs.pop("partial", False)
         serializer = self.get_serializer(
             self.filter_queryset(self.get_queryset()),
@@ -51,8 +53,13 @@ class BaseModelViewSet(viewsets.ModelViewSet):
             many=True,
             partial=partial,
         )
-
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
-
         return Response(serializer.data)
+
+    def create_batch(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data, many=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
