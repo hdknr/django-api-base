@@ -1,21 +1,23 @@
-from rest_framework import viewsets, decorators, status
+from rest_framework import viewsets, decorators, status, serializers
 from rest_framework.response import Response
 from django.contrib.auth.models import Permission
+from django.utils.functional import cached_property
 from . import paginations, permissions
 
 
 class BaseModelViewSet(viewsets.ModelViewSet):
     pagination_class = paginations.Pagination
+    fields_query = None
 
     @decorators.action(methods=["post"], detail=False)
     def batch_create(self, request, *args, **kwargs):
-        if request.method == 'GET':
+        if request.method == "GET":
             return self.list(request)
         return self.create(request, many=True)
 
-    @decorators.action(methods=['patch', 'get'], detail=False)
+    @decorators.action(methods=["patch", "get"], detail=False)
     def batch_update(self, request):
-        if request.method == 'GET':
+        if request.method == "GET":
             return self.list(request)
         return self.update(request, pk=None, many=True, partial=True)
 
@@ -44,7 +46,7 @@ class BaseModelViewSet(viewsets.ModelViewSet):
         if many:
             return self.create_batch(request, *args, **kwargs)
         return super().create(request, *args, **kwargs)
-        
+
     def update_batch(self, request, *args, **kwargs):
         partial = kwargs.pop("partial", False)
         serializer = self.get_serializer(
@@ -62,4 +64,51 @@ class BaseModelViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )
+
+    def paginate_queryset(self, queryset):
+        """(override)"""
+        # dirty coding for CSV rendering
+        if self.request.META["HTTP_ACCEPT"] == "text/csv":
+            return None
+        return super().paginate_queryset(queryset)
+
+    def get_serializer(self, *args, **kwargs):
+        """(override)"""
+        ser = super().get_serializer(*args, **kwargs)
+
+        if isinstance(ser, serializers.ListSerializer):
+            self._fields = ser.child.fields
+        else:
+            self._fields = ser.fields
+        return ser
+
+    @cached_property
+    def label_map(self):
+        fields = getattr(self, "_fields", {})
+        return dict((name, f.label) for name, f in fields.items())
+
+    def get_renderer_context(self):
+        """(override)"""
+        fields_query = getattr(self, "fields_query", None)
+
+        context = super().get_renderer_context()
+        if not fields_query:
+            return context
+
+        # dirty  coding header(list) and lable(dict)
+        context["header"] = (
+            self.request.GET[fields_query].split(",")
+            if fields_query in self.request.GET
+            else None
+        )
+
+        context["labels"] = (
+            dict((i, self.label_map.get(i, i)) for i in context["header"])
+            if context["header"]
+            else self.label_map
+        )
+
+        return context

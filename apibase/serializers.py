@@ -233,7 +233,9 @@ class BatchListSerializer(serializers.ListSerializer):
             raise exceptions.ValidationError("")
 
         objects_to_update = queryset.filter(
-            **{"{}__in".format(id_attr): updating.keys(),}
+            **{
+                "{}__in".format(id_attr): updating.keys(),
+            }
         )
 
         if len(updating) != objects_to_update.count():
