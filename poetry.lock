@@ -275,6 +275,19 @@ python-versions = ">=3.5"
 django = ">=2.2"
 
 [[package]]
+name = "djangorestframework-csv"
+version = "2.1.0"
+description = "CSV Tools for Django REST Framework"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+djangorestframework = "*"
+six = "*"
+unicodecsv = "*"
+
+[[package]]
 name = "djangorestframework-filters"
 version = "1.0.0.dev2"
 description = ""
@@ -704,6 +717,14 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "unicodecsv"
+version = "0.14.1"
+description = "Python2's stdlib csv module is nice, but it doesn't support unicode. This module is a drop-in replacement which *does*."
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "unidecode"
 version = "1.1.2"
 description = "ASCII transliterations of Unicode text"
@@ -760,7 +781,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "e27aed46b0da83c7a0289e72ca495b4307017e4f310a61b3d690f6cf4fde6ebe"
+content-hash = "ec0bd484dd1c68a2cc202bed0c715e3f668caca3124e802a4fe927e965586ba8"
 
 [metadata.files]
 aiohttp = [
@@ -923,6 +944,9 @@ django-cors-headers = [
 django-filter = []
 djangorestframework = [
     {file = "djangorestframework-3.12.2-py3-none-any.whl", hash = "sha256:0209bafcb7b5010fdfec784034f059d512256424de2a0f084cb82b096d6dd6a7"},
+]
+djangorestframework-csv = [
+    {file = "djangorestframework-csv-2.1.0.tar.gz", hash = "sha256:2f008b20a44f2d3c37835ea5b5ddfe19f54394f07b9cb267c616a917a7f7e27c"},
 ]
 djangorestframework-filters = []
 gql = [
@@ -1159,6 +1183,9 @@ typing-extensions = [
     {file = "typing_extensions-3.7.4.3-py2-none-any.whl", hash = "sha256:dafc7639cde7f1b6e1acc0f457842a83e722ccca8eef5270af2d74792619a89f"},
     {file = "typing_extensions-3.7.4.3-py3-none-any.whl", hash = "sha256:7cb407020f00f7bfc3cb3e7881628838e69d8f3fcab2f64742a5e76b2f841918"},
     {file = "typing_extensions-3.7.4.3.tar.gz", hash = "sha256:99d4073b617d30288f569d3f13d2bd7548c3a7e4c8de87db09a9d29bb3a4a60c"},
+]
+unicodecsv = [
+    {file = "unicodecsv-0.14.1.tar.gz", hash = "sha256:018c08037d48649a0412063ff4eda26eaa81eff1546dbffa51fa5293276ff7fc"},
 ]
 unidecode = [
     {file = "Unidecode-1.1.2-py2.py3-none-any.whl", hash = "sha256:4c9d15d2f73eb0d2649a151c566901f80a030da1ccb0a2043352e1dbf647586b"},
