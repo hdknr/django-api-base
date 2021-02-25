@@ -193,6 +193,10 @@ class BaseModelSerializer(serializers.ModelSerializer):
         self.update_nested_fields(instance, validated_data, children_set)
         return instance
 
+    @property
+    def view_action(self):
+        return getattr(self.context.get("view", {}), "action", None)
+
 
 class UrnModelSerializer(BaseModelSerializer):
     urn = UrnField()
