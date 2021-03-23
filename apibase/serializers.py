@@ -191,8 +191,9 @@ class BaseModelSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         children_set = self.validated_children_set(validated_data)
+        instance = super().update(instance, validated_data)
         self.update_nested_fields(instance, validated_data, children_set)
-        return super().update(instance, validated_data)
+        return instance
 
     def create(self, validated_data):
         children_set = self.validated_children_set(validated_data)
