@@ -94,6 +94,7 @@ class BaseModelSerializer(serializers.ModelSerializer):
     display = DisplayField()
 
     nested_fields = []
+    nested_fields_updateds_signal = None
 
     @property
     def children_set(self):
@@ -174,6 +175,12 @@ class BaseModelSerializer(serializers.ModelSerializer):
     def update_nested_fields(self, instance, validated_data, children_set):
         for field_name, children in children_set.items():
             self.update_nested(instance, validated_data, field_name, children)
+
+        if self.nested_fields_updateds_signal:
+            self.nested_fields_updateds_signal.send(
+                sender=instance._meta.model,
+                instance=instance,
+            )
 
     def validated_children_set(self, validated_data):
         children_set = getattr(self, "_children_set", [])
