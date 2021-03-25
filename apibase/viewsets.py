@@ -71,7 +71,7 @@ class BaseModelViewSet(viewsets.ModelViewSet):
     def paginate_queryset(self, queryset):
         """(override)"""
         # dirty coding for CSV rendering
-        if self.request.META["HTTP_ACCEPT"] == "text/csv":
+        if self.request.META.get("HTTP_ACCEPT", None) == "text/csv":
             return None
         return super().paginate_queryset(queryset)
 
