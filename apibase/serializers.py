@@ -205,6 +205,10 @@ class BaseModelSerializer(serializers.ModelSerializer):
     def view_action(self):
         return getattr(self.context.get("view", {}), "action", None)
 
+    @property
+    def request_user(self):
+        return getattr(self.context.get("request", {}), "user", None)
+
 
 class UrnModelSerializer(BaseModelSerializer):
     urn = UrnField()
