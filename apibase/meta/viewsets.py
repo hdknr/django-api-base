@@ -21,7 +21,7 @@ class ModelFieldViewSet(viewsets.ViewSet):
 
         fields = list(
             chain(*(model_class._meta.fields for model_class in models)))
-        print(fields)
+
         ser = serializers.ModelFieldSerializer(fields, many=True)
         return Response(ser.data)
 
