@@ -99,11 +99,8 @@ class BaseModelSerializer(serializers.ModelSerializer):
     action_handlers = {}
 
     def __init__(self, instance=None, data=empty, **kwargs):
-        super().__init__(instance=None, data=data, **kwargs)
-        self._actions = dict(
-            (k, v(self))
-            for k, v in self.action_handlers.items()
-        )
+        super().__init__(instance=instance, data=data, **kwargs)
+        self._actions = dict((k, v(self)) for k, v in self.action_handlers.items())
 
     def _validate_for_action(self):
         validator = self._actions.get(self.view_action, None)
@@ -114,13 +111,13 @@ class BaseModelSerializer(serializers.ModelSerializer):
         validator and validator.dispatch()
 
     def is_valid(self, raise_exception=False):
-        '''(override)'''
+        """(override)"""
         res = super().is_valid(raise_exception=raise_exception)
         res and self._validate_for_action()
         return res
 
     def save(self, **kwargs):
-        '''(override)'''
+        """(override)"""
         res = super().save()
         self._dispatch_for_action()
         return res

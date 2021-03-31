@@ -3,7 +3,7 @@ class Action:
 
     def __init__(self, serializer):
         self.serializer = serializer
-        self.extra_fields = {}
+        self.extra_fields = {"action": serializer.view_action}
 
     def validate(self):
         pass
