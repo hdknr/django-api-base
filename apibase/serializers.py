@@ -96,6 +96,35 @@ class BaseModelSerializer(serializers.ModelSerializer):
     nested_fields = []
     nested_fields_updateds_signal = None
 
+    action_handlers = {}
+
+    def __init__(self, instance=None, data=empty, **kwargs):
+        super().__init__(instance=None, data=data, **kwargs)
+        self._actions = dict(
+            (k, v(self))
+            for k, v in self.action_handlers.items()
+        )
+
+    def _validate_for_action(self):
+        validator = self._actions.get(self.view_action, None)
+        validator and validator.validate()
+
+    def _dispatch_for_action(self):
+        validator = self._actions.get(self.view_action, None)
+        validator and validator.dispatch()
+
+    def is_valid(self, raise_exception=False):
+        '''(override)'''
+        res = super().is_valid(raise_exception=raise_exception)
+        res and self._validate_for_action()
+        return res
+
+    def save(self, **kwargs):
+        '''(override)'''
+        res = super().save()
+        self._dispatch_for_action()
+        return res
+
     @property
     def children_set(self):
         return getattr(self, "_children_set", {})
