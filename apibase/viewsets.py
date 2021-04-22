@@ -2,8 +2,9 @@ from rest_framework import viewsets, decorators, status, serializers
 from rest_framework.response import Response
 from django.contrib.auth.models import Permission
 from django.utils.functional import cached_property
-from . import paginations, permissions, views
+from . import paginations, permissions, utils
 from pathlib import Path
+from django.views import static
 
 
 class BaseModelViewSet(viewsets.ModelViewSet):
@@ -124,11 +125,11 @@ class BaseModelViewSet(viewsets.ModelViewSet):
         name = str(instance)
         ext = Path(field.path).suffix
         filename = f"{field.field.verbose_name}.{name}{ext}"
-        res = views.serve(
+        disposition = utils.to_content_disposition(filename)
+        res = static.serve(
             self.request,
             field.path,
             document_root="/",
-            filename=filename,
-            as_attachment=True,
         )
+        res["Content-Disposition"] = disposition
         return res
