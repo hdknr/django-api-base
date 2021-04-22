@@ -2,8 +2,8 @@ from rest_framework import viewsets, decorators, status, serializers
 from rest_framework.response import Response
 from django.contrib.auth.models import Permission
 from django.utils.functional import cached_property
-from django.views import static
-from . import paginations, permissions
+from . import paginations, permissions, views
+from pathlib import Path
 
 
 class BaseModelViewSet(viewsets.ModelViewSet):
@@ -114,12 +114,21 @@ class BaseModelViewSet(viewsets.ModelViewSet):
 
         return context
 
-
     @decorators.action(
-        methods=["get"], detail=True,
-        url_path='(?P<field>[^/.]+)/download')
+        methods=["get"], detail=True, url_path="(?P<field>[^/.]+)/download"
+    )
     def download_filefield(self, request, pk, field):
         """ download FileField file """
         instance = self.get_object()
         field = getattr(instance, field, None)
-        return static.serve(self.request, field.path, document_root='/')
+        name = str(instance)
+        ext = Path(field.path).suffix
+        filename = f"{field.field.verbose_name}.{name}{ext}"
+        res = views.serve(
+            self.request,
+            field.path,
+            document_root="/",
+            filename=filename,
+            as_attachment=True,
+        )
+        return res
