@@ -7,7 +7,7 @@ from django.db.models import Q, IntegerField
 from functools import reduce
 import operator
 import re
-
+import jaconv
 
 
 class IntFilter(django_filters.NumberFilter):
@@ -25,9 +25,17 @@ class WordFilter(django_filters.CharFilter):
         if value in django_filters.constants.EMPTY_VALUES:
             return qs
 
+        def _q(lookup, val):
+            key = f'{lookup}__contains'
+            val2 = jaconv.zen2han(val)
+            if val2 == val:
+                return Q((key, val))
+            return Q((key, val)) | Q((key, val2))
+
         vals = re.split(self.delimiters, value)
         query = [
-            reduce(operator.or_, [Q((f'{i}__contains', v)) for i in self.lookups])
+            reduce(operator.or_,
+                   [_q(i, v) for i in self.lookups])
             for v in vals if v]
 
         qs = qs.filter(*query)
@@ -49,7 +57,7 @@ class BaseFilter(django_filters.FilterSet):
                 filter_class = IntFilter
                 param = {}
 
-        return filter_class, param 
+        return filter_class, param
 
     def filter_int(self, queryset, name, value):
         q = {name: int(round(value))}

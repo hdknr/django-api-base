@@ -1,8 +1,7 @@
 from rest_framework import permissions
-from functools import wraps, partial
+from functools import wraps
 from logging import getLogger
 logger = getLogger(__name__)
-
 
 
 def has_perms(func, permission, *args, **kwargs):
@@ -37,10 +36,9 @@ class Permission(permissions.IsAuthenticated):
         if not request.user:
             return False
 
-        isvalid = False if self.PRIVATE else (request.method in permissions.SAFE_METHODS)
+        isvalid = False if self.PRIVATE else (
+            request.method in permissions.SAFE_METHODS)
         isvalid = isvalid or request.user.has_perm(self.PERM_CODE)
         if not isvalid:
             logger.info(f"{request.user} has not {self.PERM_CODE}")
         return isvalid
-
-

@@ -1,21 +1,23 @@
 import six
 
 from django_filters.utils import get_model_field
-from django_filters.filters import RangeFilter 
+from django_filters.filters import RangeFilter
 from graphene_django.forms.converter import convert_form_field
 from graphql_relay.connection.arrayconnection import get_offset_with_default
+from graphql_relay import to_global_id
 from gql import gql, Client
+from urllib.parse import quote
 
 
 def get_filtering_args_from_filterset(filterset_class, type, obvious_filters=[]):
-    '''
+    """
     Original:
         - https://github.com/graphql-python/graphene-django/blob/master/graphene_django/filter/utils.py#L7
         - filters not in 'declared_filters' are defined by Graphene-Django for model fields `formfield`.
 
     obivius_filters:
         - Force to use field class defined in filters.
-    '''
+    """
 
     args = {}
     model = filterset_class._meta.model
@@ -43,10 +45,12 @@ def get_filtering_args_from_filterset(filterset_class, type, obvious_filters=[])
         field_type.description = filter_field.label
 
         # For RangeFilter, duplicate filter args for suffixes
-        if isinstance(filter_field, RangeFilter) and hasattr(filter_field.field, 'widget'):
-            suffixes = getattr(filter_field.field.widget, 'suffixes', []) 
+        if isinstance(filter_field, RangeFilter) and hasattr(
+            filter_field.field, "widget"
+        ):
+            suffixes = getattr(filter_field.field.widget, "suffixes", [])
             for s in suffixes:
-                if s: 
+                if s:
                     args[f"{name}_{s}"] = field_type
         else:
             args[name] = field_type
@@ -56,10 +60,19 @@ def get_filtering_args_from_filterset(filterset_class, type, obvious_filters=[])
 
 def resolve_start_offset(slice_start, after):
     after_offset = get_offset_with_default(after, -1)
-    return  max(slice_start - 1, after_offset, -1) + 1
+    return max(slice_start - 1, after_offset, -1) + 1
 
 
 def gql_query(schema, query_str, **params):
     client = Client(schema=schema)
     query = gql(query_str)
     return client.execute(query, variable_values=params)
+
+
+def to_gql_relay_id(schema_name, id):
+    return to_global_id(schema_name, id)
+
+
+def to_content_disposition(filename):
+    utf8_filename = quote(filename)
+    return f"attachment; filename*=utf-8''{utf8_filename}"
