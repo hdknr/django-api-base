@@ -100,6 +100,13 @@ class BaseModelViewSet(viewsets.ModelViewSet):
         if not fields_query:
             return context
 
+        if self.request.META.get('HTTP_ACCEPT', '').startswith('text/csv'):
+            if self.request.encoding is None or self.request.encoding == 'utf-8':
+                context['encoding'] = 'utf-8-sig'
+            else:
+                context['encoding'] = self.request.encoding
+
+
         # dirty  coding header(list) and lable(dict)
         context["header"] = (
             self.request.GET[fields_query].split(",")
