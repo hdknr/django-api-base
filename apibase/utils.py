@@ -7,6 +7,7 @@ from graphql_relay.connection.arrayconnection import get_offset_with_default
 from graphql_relay import to_global_id
 from gql import gql, Client
 from urllib.parse import quote
+from graphene_django.settings import graphene_settings
 
 
 def get_filtering_args_from_filterset(filterset_class, type, obvious_filters=[]):
@@ -76,3 +77,23 @@ def to_gql_relay_id(schema_name, id):
 def to_content_disposition(filename):
     utf8_filename = quote(filename)
     return f"attachment; filename*=utf-8''{utf8_filename}"
+
+
+def query_instance(query_string, instance=None, object_name=None, id=None, schema=None, **kwargs):
+    schema = schema or graphene_settings.SCHEMA
+    if instance:
+        object_name = instance._meta.object_name
+        id = instance.id
+
+    if object_name and id:
+        id = to_gql_relay_id(object_name, id)
+
+    return gql_query(schema, query_string, ID=id)
+
+
+def query(query_string, schema=None, **params):
+    schema = schema or graphene_settings.SCHEMA
+    if "instance" in params or ("object_name" in params and "id" in params):
+        return query_instance(query_string, **params)
+
+    return gql_query(schema, query_string, **params)
