@@ -5,6 +5,11 @@ class Action:
         self.serializer = serializer
         self.extra_fields = {"action": serializer.view_action}
 
+    def save(self, saving):
+        instance = saving.save()
+        self.dispatch()
+        return instance
+
     def validate(self):
         pass
 

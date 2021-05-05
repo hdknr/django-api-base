@@ -106,9 +106,11 @@ class BaseModelSerializer(serializers.ModelSerializer):
         validator = self._actions.get(self.view_action, None)
         validator and validator.validate()
 
-    def _dispatch_for_action(self):
+    def _save_for_action(self):
         validator = self._actions.get(self.view_action, None)
-        validator and validator.dispatch()
+        if validator:
+            return validator.save(super())
+        return super().save()
 
     def is_valid(self, raise_exception=False):
         """(override)"""
@@ -118,9 +120,7 @@ class BaseModelSerializer(serializers.ModelSerializer):
 
     def save(self, **kwargs):
         """(override)"""
-        res = super().save()
-        self._dispatch_for_action()
-        return res
+        return self._save_for_action(**kwargs)
 
     @property
     def children_set(self):
@@ -204,8 +204,7 @@ class BaseModelSerializer(serializers.ModelSerializer):
 
         if self.nested_fields_updateds_signal:
             self.nested_fields_updateds_signal.send(
-                sender=instance._meta.model,
-                instance=instance,
+                sender=instance._meta.model, instance=instance,
             )
 
     def validated_children_set(self, validated_data):
@@ -275,9 +274,7 @@ class BatchListSerializer(serializers.ListSerializer):
             raise exceptions.ValidationError("")
 
         objects_to_update = queryset.filter(
-            **{
-                "{}__in".format(id_attr): updating.keys(),
-            }
+            **{"{}__in".format(id_attr): updating.keys(),}
         )
 
         if len(updating) != objects_to_update.count():
