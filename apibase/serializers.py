@@ -102,14 +102,18 @@ class BaseModelSerializer(serializers.ModelSerializer):
         super().__init__(instance=instance, data=data, **kwargs)
         self._actions = dict((k, v(self)) for k, v in self.action_handlers.items())
 
+    def _get_action(self, name):
+        action = self._actions.get(name, None) or self._actions.get("*", None)
+        return action
+
     def _validate_for_action(self):
-        validator = self._actions.get(self.view_action, None)
-        validator and validator.validate()
+        action = self._get_action(self.view_action)
+        action and action.validate()
 
     def _save_for_action(self):
-        validator = self._actions.get(self.view_action, None)
-        if validator:
-            return validator.save(super())
+        action = self._get_action(self.view_action)
+        if action:
+            return action.save(super())
         return super().save()
 
     def is_valid(self, raise_exception=False):

@@ -1,14 +1,17 @@
 class Action:
     signal = None
 
-    def __init__(self, serializer):
+    def __init__(self, serializer=None, action=None):
         self.serializer = serializer
-        self.extra_fields = {"action": serializer.view_action}
+        self.extra_fields = {"action": serializer and serializer.view_action or action}
 
     def save(self, saving):
         instance = saving.save()
         self.dispatch()
         return instance
+
+    def delete(self, deleting):
+        deleting.delete()
 
     def validate(self):
         pass
