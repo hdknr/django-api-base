@@ -1,19 +1,24 @@
-from django.urls import reverse
-from django.http import QueryDict
+import inspect
+import re
+
+from django.contrib.sites.shortcuts import get_current_site
 from django.db.models import Model
 from django.db.models.fields.reverse_related import OneToOneRel
-from django.contrib.sites.shortcuts import get_current_site
-from rest_framework import fields, serializers, exceptions
+from django.http import QueryDict
+from django.urls import reverse
+from rest_framework import exceptions, fields, serializers
 from rest_framework.fields import empty
+
 from .settings import apibase_settings
-import re
-import inspect
 
 
 def to_urn(instance, nss=None, nid=None):
+    opt = getattr(instance, "_meta", None)
+    if not opt:
+        return ""
     nid = nid or apibase_settings.URN_NID
     nss = nss or apibase_settings.URN_NSS
-    return f"urn:{nid}:{nss}:{instance._meta.app_label}:{instance._meta.model_name}:{instance.pk}"
+    return f"urn:{nid}:{nss}:{opt.app_label}:{opt.model_name}:{instance.pk}"
 
 
 def endpoint_from_urn(urn, domain=None, nid=None, prefix="/api/rest", request=None):
@@ -208,7 +213,8 @@ class BaseModelSerializer(serializers.ModelSerializer):
 
         if self.nested_fields_updateds_signal:
             self.nested_fields_updateds_signal.send(
-                sender=instance._meta.model, instance=instance,
+                sender=instance._meta.model,
+                instance=instance,
             )
 
     def validated_children_set(self, validated_data):
@@ -278,7 +284,9 @@ class BatchListSerializer(serializers.ListSerializer):
             raise exceptions.ValidationError("")
 
         objects_to_update = queryset.filter(
-            **{"{}__in".format(id_attr): updating.keys(),}
+            **{
+                "{}__in".format(id_attr): updating.keys(),
+            }
         )
 
         if len(updating) != objects_to_update.count():
