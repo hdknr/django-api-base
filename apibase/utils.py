@@ -1,13 +1,15 @@
-import six
-
-from django_filters.utils import get_model_field
-from django_filters.filters import RangeFilter
-from graphene_django.forms.converter import convert_form_field
-from graphql_relay.connection.arrayconnection import get_offset_with_default
-from graphql_relay import to_global_id
-from gql import gql, Client
 from urllib.parse import quote
+
+import graphene
+import six
+from django_filters.fields import MultipleChoiceField
+from django_filters.filters import RangeFilter
+from django_filters.utils import get_model_field
+from gql import Client, gql
+from graphene_django.forms.converter import convert_form_field
 from graphene_django.settings import graphene_settings
+from graphql_relay import to_global_id
+from graphql_relay.connection.arrayconnection import get_offset_with_default
 
 
 def get_filtering_args_from_filterset(filterset_class, type, obvious_filters=[]):
@@ -79,7 +81,9 @@ def to_content_disposition(filename):
     return f"attachment; filename*=utf-8''{utf8_filename}"
 
 
-def query_instance(query_string, instance=None, object_name=None, id=None, schema=None, **kwargs):
+def query_instance(
+    query_string, instance=None, object_name=None, id=None, schema=None, **kwargs
+):
     schema = schema or graphene_settings.SCHEMA
     if instance:
         object_name = instance._meta.object_name
@@ -97,3 +101,13 @@ def query(query_string, schema=None, **params):
         return query_instance(query_string, **params)
 
     return gql_query(schema, query_string, **params)
+
+
+def convert_multiple_choice_filter_to_list_field(field):
+    return graphene.List(graphene.String, required=field.required)
+
+
+def init_converter():
+    convert_form_field.register(
+        MultipleChoiceField, convert_multiple_choice_filter_to_list_field
+    )
