@@ -100,12 +100,11 @@ class BaseModelViewSet(viewsets.ModelViewSet):
         if not fields_query:
             return context
 
-        if self.request.META.get('HTTP_ACCEPT', '').startswith('text/csv'):
-            if self.request.encoding is None or self.request.encoding == 'utf-8':
-                context['encoding'] = 'utf-8-sig'
+        if self.request.META.get("HTTP_ACCEPT", "").startswith("text/csv"):
+            if self.request.encoding is None or self.request.encoding == "utf-8":
+                context["encoding"] = "utf-8-sig"
             else:
-                context['encoding'] = self.request.encoding
-
+                context["encoding"] = self.request.encoding
 
         # dirty  coding header(list) and lable(dict)
         context["header"] = (
@@ -129,10 +128,10 @@ class BaseModelViewSet(viewsets.ModelViewSet):
         """ download FileField file """
         instance = self.get_object()
         field = getattr(instance, field, None)
-        name = str(instance)
-        ext = Path(field.path).suffix
-        filename = f"{field.field.verbose_name}.{name}{ext}"
-        disposition = utils.to_content_disposition(filename)
+
+        disposition = utils.to_content_disposition(
+            self.get_download_filefield_name(instance, field)
+        )
         res = static.serve(
             self.request,
             field.path,
@@ -140,3 +139,8 @@ class BaseModelViewSet(viewsets.ModelViewSet):
         )
         res["Content-Disposition"] = disposition
         return res
+
+    def get_download_filefield_name(self, instance, field):
+        name = str(instance)
+        ext = Path(field.path).suffix
+        return f"{field.field.verbose_name}.{name}{ext}"
