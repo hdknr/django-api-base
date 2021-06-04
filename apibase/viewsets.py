@@ -1,13 +1,29 @@
-from rest_framework import viewsets, decorators, status, serializers
-from rest_framework.response import Response
+from pathlib import Path
+
 from django.contrib.auth.models import Permission
 from django.utils.functional import cached_property
-from . import paginations, permissions, utils
-from pathlib import Path
 from django.views import static
+from rest_framework import decorators, serializers, status, viewsets
+from rest_framework.response import Response
+
+from . import paginations, permissions, utils
 
 
-class BaseModelViewSet(viewsets.ModelViewSet):
+class ViewSetMixin:
+    @classmethod
+    def permissions(cls):
+        return [
+            Permission.objects.filter(
+                **dict(
+                    zip(("content_type__app_label", "codename"), p.PERM_CODE.split("."))
+                )
+            ).first()
+            for p in cls.permission_classes
+            if issubclass(p, permissions.Permission) and p.PERM_CODE
+        ]
+
+
+class BaseModelViewSet(viewsets.ModelViewSet, ViewSetMixin):
     pagination_class = paginations.Pagination
     fields_query = None
 
@@ -22,18 +38,6 @@ class BaseModelViewSet(viewsets.ModelViewSet):
         if request.method == "GET":
             return self.list(request)
         return self.update(request, pk=None, many=True, partial=True)
-
-    @classmethod
-    def permissions(cls):
-        return [
-            Permission.objects.filter(
-                **dict(
-                    zip(("content_type__app_label", "codename"), p.PERM_CODE.split("."))
-                )
-            ).first()
-            for p in cls.permission_classes
-            if issubclass(p, permissions.Permission) and p.PERM_CODE
-        ]
 
     def update(self, request, *args, **kwargs):
         """(override)"""
