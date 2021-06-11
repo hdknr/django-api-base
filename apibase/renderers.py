@@ -9,8 +9,22 @@ class BrowsableAPIRendererWithoutForms(BrowsableAPIRenderer):
     def get_rendered_html_form(self, data, view, method, request):
         return None
 
+
 class CsvRenderer(renderers.CSVRenderer):
     pass
 
 
-RENDERERS = tuple(api_settings.DEFAULT_RENDERER_CLASSES) + (CsvRenderer, ) 
+class PdfRenderer(renderers.BaseRenderer):
+    media_type = "application/pdf"
+    format = "pdf"
+    charset = None
+    render_style = "binary"
+
+    def render(self, data, media_type=None, renderer_context=None):
+        return data
+
+
+RENDERERS = tuple(api_settings.DEFAULT_RENDERER_CLASSES) + (
+    CsvRenderer,
+    PdfRenderer,
+)
