@@ -1,13 +1,14 @@
-'''
-https://django-filter.readthedocs.io/en/master/
-'''
-import django_filters
-from django import forms
-from django.db.models import Q, IntegerField
-from functools import reduce
+"""
+https://django-filter.readthedocs.io/en/stable/
+"""
 import operator
 import re
+from functools import reduce
+
+import django_filters
 import jaconv
+from django import forms
+from django.db.models import IntegerField, Q
 
 
 class IntFilter(django_filters.NumberFilter):
@@ -15,8 +16,7 @@ class IntFilter(django_filters.NumberFilter):
 
 
 class WordFilter(django_filters.CharFilter):
-
-    def __init__(self, *args, lookups=[], delimiters=r'[\s\u3000,]+', **kwargs):
+    def __init__(self, *args, lookups=[], delimiters=r"[\s\u3000,]+", **kwargs):
         self.lookups = lookups
         self.delimiters = delimiters
         super().__init__(*args, **kwargs)
@@ -26,7 +26,7 @@ class WordFilter(django_filters.CharFilter):
             return qs
 
         def _q(lookup, val):
-            key = f'{lookup}__contains'
+            key = f"{lookup}__contains"
             val2 = jaconv.zen2han(val)
             if val2 == val:
                 return Q((key, val))
@@ -34,9 +34,8 @@ class WordFilter(django_filters.CharFilter):
 
         vals = re.split(self.delimiters, value)
         query = [
-            reduce(operator.or_,
-                   [_q(i, v) for i in self.lookups])
-            for v in vals if v]
+            reduce(operator.or_, [_q(i, v) for i in self.lookups]) for v in vals if v
+        ]
 
         qs = qs.filter(*query)
         if self.distinct:
@@ -45,13 +44,13 @@ class WordFilter(django_filters.CharFilter):
 
 
 class BaseFilter(django_filters.FilterSet):
-    pk = django_filters.NumberFilter(field_name='id')
+    pk = django_filters.NumberFilter(field_name="id")
 
     @classmethod
     def filter_for_lookup(cls, field, lookup_type):
         filter_class, param = super().filter_for_lookup(field, lookup_type)
 
-        if lookup_type == 'exact' and filter_class == django_filters.ChoiceFilter:
+        if lookup_type == "exact" and filter_class == django_filters.ChoiceFilter:
             if isinstance(field, IntegerField):
                 # print(field)
                 filter_class = IntFilter
@@ -62,3 +61,21 @@ class BaseFilter(django_filters.FilterSet):
     def filter_int(self, queryset, name, value):
         q = {name: int(round(value))}
         return queryset.filter(**q)
+
+
+class AllValuesMultipleFilter(django_filters.AllValuesMultipleFilter):
+    # field_class: django_filters.fields.MultipleChoiceField
+
+    @property
+    def field(self):
+        # not cache as '_field' to work with `choices`
+        if hasattr(self, "model"):
+            qs = self.model._default_manager.distinct()
+            qs = qs.order_by(self.field_name).values_list(self.field_name, flat=True)
+            self.extra["choices"] = [(o, o) for o in qs]
+        field_kwargs = self.extra.copy()
+        return self.field_class(label=self.label, **field_kwargs)
+
+    def get_filter_predicate(self, v):
+        # 'field_name' MUST BE endswith "__in"
+        return {self.field_name: v}
