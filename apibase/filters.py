@@ -10,6 +10,8 @@ import jaconv
 from django import forms
 from django.db.models import IntegerField, Q
 
+from .fields import ListCharField
+
 
 class IntFilter(django_filters.NumberFilter):
     field_class = forms.IntegerField
@@ -78,4 +80,19 @@ class AllValuesMultipleFilter(django_filters.AllValuesMultipleFilter):
 
     def get_filter_predicate(self, v):
         # 'field_name' MUST BE endswith "__in"
-        return {self.field_name: v}
+        return {f"{self.field_name}__in": v}
+
+
+class ListCharInFilter(django_filters.CharFilter):
+    field_class = ListCharField
+
+    def get_filter_predicate(self, v):
+        return {f"{self.field_name}__in": v}
+
+    def filter(self, qs, values):
+        if not values:
+            return qs
+
+        predicate = self.get_filter_predicate(values)
+        qs = self.get_method(qs)(**predicate)
+        return qs.distinct() if self.distinct else qs
