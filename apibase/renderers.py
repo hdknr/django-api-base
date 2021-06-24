@@ -1,6 +1,6 @@
-from rest_framework.renderers import BrowsableAPIRenderer
-from rest_framework_csv import renderers
+from rest_framework.renderers import BrowsableAPIRenderer, StaticHTMLRenderer
 from rest_framework.settings import api_settings
+from rest_framework_csv import renderers
 
 
 class BrowsableAPIRendererWithoutForms(BrowsableAPIRenderer):
@@ -27,4 +27,5 @@ class PdfRenderer(renderers.BaseRenderer):
 RENDERERS = tuple(api_settings.DEFAULT_RENDERER_CLASSES) + (
     CsvRenderer,
     PdfRenderer,
+    StaticHTMLRenderer,
 )
