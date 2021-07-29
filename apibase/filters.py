@@ -10,7 +10,7 @@ import jaconv
 from django import forms
 from django.db.models import IntegerField, Q
 
-from .fields import ListCharField
+from .fields import ListCharField, MonthRangeField
 
 
 class IntFilter(django_filters.NumberFilter):
@@ -96,3 +96,7 @@ class ListCharInFilter(django_filters.CharFilter):
         predicate = self.get_filter_predicate(values)
         qs = self.get_method(qs)(**predicate)
         return qs.distinct() if self.distinct else qs
+
+
+class MonthFromToRangeFilter(django_filters.RangeFilter):
+    field_class = MonthRangeField

@@ -24,8 +24,19 @@ class PdfRenderer(renderers.BaseRenderer):
         return data
 
 
+class XlsxRenderer(renderers.BaseRenderer):
+    media_type = "application/xlsx"
+    format = "xlsx"
+    charset = None
+    render_style = "binary"
+
+    def render(self, data, media_type=None, renderer_context=None):
+        return data
+
+
 RENDERERS = tuple(api_settings.DEFAULT_RENDERER_CLASSES) + (
     CsvRenderer,
+    XlsxRenderer,
     PdfRenderer,
     StaticHTMLRenderer,
 )

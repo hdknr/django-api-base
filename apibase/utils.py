@@ -11,7 +11,7 @@ from graphene_django.settings import graphene_settings
 from graphql_relay import to_global_id
 from graphql_relay.connection.arrayconnection import get_offset_with_default
 
-from .fields import ListCharField
+from .fields import ListCharField, MonthRangeField
 
 
 def get_filtering_args_from_filterset(filterset_class, type, obvious_filters=[]):
@@ -113,5 +113,10 @@ def init_converter():
 
     convert_form_field.register(
         ListCharField,
+        lambda field: graphene.List(graphene.String, required=field.required),
+    )
+
+    convert_form_field.register(
+        MonthRangeField,
         lambda field: graphene.List(graphene.String, required=field.required),
     )
