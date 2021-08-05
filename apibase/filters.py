@@ -21,6 +21,7 @@ class WordFilter(django_filters.CharFilter):
     def __init__(self, *args, lookups=[], delimiters=r"[\s\u3000,]+", **kwargs):
         self.lookups = lookups
         self.delimiters = delimiters
+        kwargs["lookup_expr"] = kwargs.get("lookup_expr", "contains")
         super().__init__(*args, **kwargs)
 
     def filter(self, qs, value):
@@ -28,16 +29,14 @@ class WordFilter(django_filters.CharFilter):
             return qs
 
         def _q(lookup, val):
-            key = f"{lookup}__contains"
+            key = f"{lookup}__{self.lookup_expr}"
             val2 = jaconv.zen2han(val)
             if val2 == val:
                 return Q((key, val))
             return Q((key, val)) | Q((key, val2))
 
         vals = re.split(self.delimiters, value)
-        query = [
-            reduce(operator.or_, [_q(i, v) for i in self.lookups]) for v in vals if v
-        ]
+        query = [reduce(operator.or_, [_q(i, v) for i in self.lookups]) for v in vals if v]
 
         qs = qs.filter(*query)
         if self.distinct:
