@@ -36,8 +36,8 @@ class RestTestCase(TransactionTestCase):
 
         if perms:
             user.user_permissions.add(*perms)
-
         user.user_data = user_data
+        return user
 
     def requester(self, name=None, data=None, perms=None):
         user_data = name and data[name] or None
