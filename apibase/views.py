@@ -2,11 +2,7 @@ import rest_framework
 from django.http import HttpResponse
 from graphene_django import settings, views
 from graphql.utils import schema_printer
-from rest_framework.decorators import (
-    api_view,
-    authentication_classes,
-    permission_classes,
-)
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.settings import api_settings
 

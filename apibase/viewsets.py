@@ -14,9 +14,7 @@ class ViewSetMixin:
     def permissions(cls):
         return [
             Permission.objects.filter(
-                **dict(
-                    zip(("content_type__app_label", "codename"), p.PERM_CODE.split("."))
-                )
+                **dict(zip(("content_type__app_label", "codename"), p.PERM_CODE.split(".")))
             ).first()
             for p in cls.permission_classes
             if issubclass(p, permissions.Permission) and p.PERM_CODE
@@ -70,9 +68,7 @@ class BaseModelViewSet(viewsets.ModelViewSet, ViewSetMixin):
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data, status=status.HTTP_201_CREATED, headers=headers
-        )
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def paginate_queryset(self, queryset):
         """(override)"""
@@ -111,31 +107,21 @@ class BaseModelViewSet(viewsets.ModelViewSet, ViewSetMixin):
                 context["encoding"] = self.request.encoding
 
         # dirty  coding header(list) and lable(dict)
-        context["header"] = (
-            self.request.GET[fields_query].split(",")
-            if fields_query in self.request.GET
-            else None
-        )
+        context["header"] = self.request.GET[fields_query].split(",") if fields_query in self.request.GET else None
 
         context["labels"] = (
-            dict((i, self.label_map.get(i, i)) for i in context["header"])
-            if context["header"]
-            else self.label_map
+            dict((i, self.label_map.get(i, i)) for i in context["header"]) if context["header"] else self.label_map
         )
 
         return context
 
-    @decorators.action(
-        methods=["get"], detail=True, url_path="(?P<field>[^/.]+)/download"
-    )
+    @decorators.action(methods=["get"], detail=True, url_path="(?P<field>[^/.]+)/download")
     def download_filefield(self, request, pk, field):
         """ download FileField file """
         instance = self.get_object()
         field = getattr(instance, field, None)
 
-        disposition = utils.to_content_disposition(
-            self.get_download_filefield_name(instance, field)
-        )
+        disposition = utils.to_content_disposition(self.get_download_filefield_name(instance, field))
         res = static.serve(
             self.request,
             field.path,

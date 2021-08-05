@@ -1,8 +1,10 @@
+from logging import getLogger
+
 import graphene
-from . import query
 from apibase.utils import gql_query
 
-from logging import getLogger
+from . import query
+
 logger = getLogger()
 
 

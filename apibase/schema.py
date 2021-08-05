@@ -1,14 +1,17 @@
+import decimal
+import json
+
 import graphene.relay
+from django.core.serializers.json import DjangoJSONEncoder
+from django.db.models import QuerySet
+from graphene.types import generic, resolver
+
 # https://docs.graphene-python.org/projects/django/en/latest/queries/
 from graphene_django.filter import DjangoFilterConnectionField
 from graphene_django.rest_framework.mutation import SerializerMutation
 from graphql_relay import from_global_id
-from graphene.types import resolver, generic
-from django.db.models import QuerySet
-import decimal
-from django.core.serializers.json import DjangoJSONEncoder
-from . import serializers, filters, utils
-import json
+
+from . import filters, serializers, utils
 
 
 class JSONEncode(DjangoJSONEncoder):
@@ -20,9 +23,9 @@ class JSONEncode(DjangoJSONEncoder):
 
 
 def default_resolver(attname, default_value, root, info, **args):
-    '''root: model instance, info:graphql.execution.base.ResolveInfo'''
+    """root: model instance, info:graphql.execution.base.ResolveInfo"""
     res = resolver.default_resolver(attname, default_value, root, info, **args)
-    if hasattr(info.parent_type.graphene_type, 'patch_result'):
+    if hasattr(info.parent_type.graphene_type, "patch_result"):
         return info.parent_type.graphene_type.patch_result(res, attname, default_value, root, info, **args)
     return res
 
@@ -40,7 +43,7 @@ class NodeMixin(object):
 
     def resolve_endpoint(self, info):
         path = serializers.drf_endpoint(self)
-        if hasattr(info.context, 'build_absolute_uri'):
+        if hasattr(info.context, "build_absolute_uri"):
             return info.context.build_absolute_uri(path)
         return path
 
@@ -64,7 +67,6 @@ class NodeSet(DjangoFilterConnectionField):
 
     @property
     def type(self):
-
         class NodeSetConnection(graphene.Connection):
             total_count = graphene.Int()
             records = graphene.Int()
@@ -72,13 +74,13 @@ class NodeSet(DjangoFilterConnectionField):
 
             class Meta:
                 node = self._type
-                name = '{}NodeSetConnection'.format(self._type._meta.name)
+                name = "{}NodeSetConnection".format(self._type._meta.name)
 
             def resolve_total_count(self, info, **kwargs):
                 return self.length
 
             def resolve_summary(self, info, **kwargs):
-                if isinstance(self.iterable, QuerySet) and hasattr(self.iterable, 'summary'):
+                if isinstance(self.iterable, QuerySet) and hasattr(self.iterable, "summary"):
                     data = json.dumps(self.iterable.summary(), cls=JSONEncode)
                     return json.loads(data)
                 return None
@@ -86,7 +88,7 @@ class NodeSet(DjangoFilterConnectionField):
             def resolve_records(self, info, **kwargs):
                 if isinstance(self.iterable, QuerySet):
                     # TODO: each models may have it own countable criteria
-                    return self.iterable.order_by('id').distinct().count()
+                    return self.iterable.order_by("id").distinct().count()
 
                 return self.length
 
@@ -98,11 +100,10 @@ class NodeSet(DjangoFilterConnectionField):
         # args: GraphQL Query
         # iterable: QuerySet
 
-        connection = super().resolve_connection(
-            connection, args, iterable, *nargs, **kwargs)
+        connection = super().resolve_connection(connection, args, iterable, *nargs, **kwargs)
 
-        start_offset = utils.resolve_start_offset(0, args.get('after'))
-        connection.page_info.has_previous_page = (start_offset > 0)
+        start_offset = utils.resolve_start_offset(0, args.get("after"))
+        connection.page_info.has_previous_page = start_offset > 0
 
         return connection
 
@@ -113,15 +114,12 @@ class NodeSet(DjangoFilterConnectionField):
     @property
     def filtering_args(self):
         return utils.get_filtering_args_from_filterset(
-            self.filterset_class, self.node_type,
-            obvious_filters=self.obvious_filters)
+            self.filterset_class, self.node_type, obvious_filters=self.obvious_filters
+        )
 
     @classmethod
-    def resolve_queryset(
-        cls, connection, iterable, info, args, filtering_args, filterset_class
-    ):
-        qs = super().resolve_queryset(
-            connection, iterable, info, args, filtering_args, filterset_class)
+    def resolve_queryset(cls, connection, iterable, info, args, filtering_args, filterset_class):
+        qs = super().resolve_queryset(connection, iterable, info, args, filtering_args, filterset_class)
         # duplicated result when related models are filtered
         return qs.distinct()
 
@@ -130,10 +128,10 @@ class BaseSerializerMutation(SerializerMutation):
     class Meta:
         abstract = True
 
-    @ classmethod
+    @classmethod
     def get_serializer_kwargs(cls, root, info, **input):
-        client_mutation_id = input.get('client_mutation_id', None)
+        client_mutation_id = input.get("client_mutation_id", None)
         if isinstance(client_mutation_id, str):
             _, id = from_global_id(client_mutation_id)
-            input['id'] = id
+            input["id"] = id
         return super().get_serializer_kwargs(root, info, **input)

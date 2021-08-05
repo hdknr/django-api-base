@@ -9,4 +9,4 @@ def all_permissions(self):
     return permissions
 
 
-User = type('User', (), {'all_permissions': all_permissions})
+User = type("User", (), {"all_permissions": all_permissions})

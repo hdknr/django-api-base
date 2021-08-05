@@ -1,8 +1,8 @@
 import graphene
 import graphene.relay
+from apibase.schema import NodeMixin, NodeSet
 from graphene_django.types import DjangoObjectType
 
-from apibase.schema import NodeMixin, NodeSet
 from .. import models
 from ..models.methods import all_permissions
 from . import filters
@@ -14,7 +14,7 @@ class User(NodeMixin, DjangoObjectType):
     class Meta:
         model = models.User
         filterset_class = filters.UserFilter
-        interfaces = (graphene.Node, )
+        interfaces = (graphene.Node,)
         convert_choices_to_enum = False
 
     def resolve_permissions(root, info):
@@ -25,7 +25,7 @@ class Group(NodeMixin, DjangoObjectType):
     class Meta:
         model = models.Group
         filterset_class = filters.GroupFilter
-        interfaces = (graphene.Node, )
+        interfaces = (graphene.Node,)
         convert_choices_to_enum = False
 
 
@@ -33,7 +33,7 @@ class Permission(NodeMixin, DjangoObjectType):
     class Meta:
         model = models.Permission
         filterset_class = filters.PermissionFilter
-        interfaces = (graphene.Node, )
+        interfaces = (graphene.Node,)
         convert_choices_to_enum = False
 
 
@@ -41,7 +41,7 @@ class ContentType(NodeMixin, DjangoObjectType):
     class Meta:
         model = models.ContentType
         filterset_class = filters.ContentTypeFilter
-        interfaces = (graphene.Node, )
+        interfaces = (graphene.Node,)
         convert_choices_to_enum = False
 
 

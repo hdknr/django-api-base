@@ -40,10 +40,7 @@ def drf_endpoint(instance, url_name=None, pk_name="pk"):
     try:
         if hasattr(instance, "get_endpoint_url"):
             return instance.get_endpoint_url()
-        name = (
-            url_name
-            or f"api-{instance._meta.app_label}-{instance._meta.model_name}-detail"
-        )
+        name = url_name or f"api-{instance._meta.app_label}-{instance._meta.model_name}-detail"
         return reverse(name, kwargs={pk_name: instance.pk})
     except:
         pass
@@ -166,9 +163,7 @@ class BaseModelSerializer(serializers.ModelSerializer):
         if self.nested_fields:
             if isinstance(data, QueryDict):
                 return self.run_validation_querydict(data=data)
-            self._children_set = dict(
-                (i, data.pop(i, None)) for i in self.nested_fields
-            )
+            self._children_set = dict((i, data.pop(i, None)) for i in self.nested_fields)
 
         return super().run_validation(data=data)
 
@@ -219,9 +214,7 @@ class BaseModelSerializer(serializers.ModelSerializer):
 
     def validated_children_set(self, validated_data):
         children_set = getattr(self, "_children_set", [])
-        children_set = children_set or dict(
-            (i, validated_data.pop(i, [])) for i in self.nested_fields
-        )
+        children_set = children_set or dict((i, validated_data.pop(i, [])) for i in self.nested_fields)
         return children_set
 
     def update(self, instance, validated_data):
@@ -253,9 +246,7 @@ class BatchSerializerMixin:
     def to_internal_value(self, data):
         ret = super().to_internal_value(data)
         id_attr = getattr(self.Meta, "update_lookup_field", "id")
-        request_method = getattr(
-            getattr(self.context.get("view"), "request"), "method", ""
-        )
+        request_method = getattr(getattr(self.context.get("view"), "request"), "method", "")
 
         if all(
             (

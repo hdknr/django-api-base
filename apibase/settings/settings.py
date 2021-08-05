@@ -22,14 +22,12 @@ def import_from_string(val, setting_name):
     try:
         return import_string(val)
     except ImportError as e:
-        msg = "Could not import '%s' for API setting '%s'. %s: %s." % (
-            val, setting_name, e.__class__.__name__, e)
+        msg = "Could not import '%s' for API setting '%s'. %s: %s." % (val, setting_name, e.__class__.__name__, e)
         raise ImportError(msg)
 
 
 class Settings(object):
-    """base DRF APISettings
-    """
+    """base DRF APISettings"""
 
     def __init__(self, user_settings=None, defaults=None, import_strings=None):
         self.user_settings = user_settings or {}

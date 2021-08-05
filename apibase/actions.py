@@ -18,7 +18,5 @@ class Action:
 
     def dispatch(self):
         self.signal and self.signal.send(
-            sender=self.serializer.instance._meta.model,
-            instance=self.serializer.instance,
-            **self.extra_fields
+            sender=self.serializer.instance._meta.model, instance=self.serializer.instance, **self.extra_fields
         )
