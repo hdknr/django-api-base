@@ -2,9 +2,11 @@ import copy
 import json
 
 import yaml
-from django.contrib.auth import models as auth_models
+from django.contrib.auth import get_user_model
 from django.test import TransactionTestCase
 from rest_framework.test import APIClient
+
+User = get_user_model()
 
 
 class RestTestCase(TransactionTestCase):
@@ -26,7 +28,7 @@ class RestTestCase(TransactionTestCase):
         user_data = copy.deepcopy(user_data)
         username = user_data.pop("username")
 
-        user = auth_models.User.objects.filter(username=username).first() or auth_models.User.objects.create_user(
+        user = User.objects.filter(username=username).first() or User.objects.create_user(
             username=username,
             email=user_data.get("email", f"{username}@localhost"),
             password=user_data.get("password", "password"),
