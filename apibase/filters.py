@@ -108,7 +108,10 @@ class RelatedFilterSetMixin:
     @classmethod
     def create_related_filterset(cls, related_name):
         fields = dict(
-            (f"{related_name}__{key}", instance.__class__(label=instance.label, field_name=f"{related_name}__{instance.field_name}"))
+            (
+                f"{related_name}__{key}",
+                instance.__class__(label=instance.label, field_name=f"{related_name}__{instance.field_name}"),
+            )
             for key, instance in cls.declared_filters.items()
         )
         return type(f"RelatedFilter_{related_name}", (django_filters.FilterSet,), fields)

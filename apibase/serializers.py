@@ -42,7 +42,7 @@ def drf_endpoint(instance, url_name=None, pk_name="pk"):
             return instance.get_endpoint_url()
         name = url_name or f"api-{instance._meta.app_label}-{instance._meta.model_name}-detail"
         return reverse(name, kwargs={pk_name: instance.pk})
-    except:
+    except Exception:
         pass
     return ""
 

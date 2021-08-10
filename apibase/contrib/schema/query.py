@@ -1,7 +1,8 @@
 import graphene
 import graphene.relay
-from apibase.schema import NodeMixin, NodeSet
 from graphene_django.types import DjangoObjectType
+
+from apibase.schema import NodeMixin, NodeSet
 
 from .. import models
 from ..models.methods import all_permissions

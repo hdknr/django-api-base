@@ -1,6 +1,7 @@
 from logging import getLogger
 
 import graphene
+
 from apibase.utils import gql_query
 
 from . import query

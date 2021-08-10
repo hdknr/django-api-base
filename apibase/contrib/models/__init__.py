@@ -1,4 +1,4 @@
-from django.contrib.auth.models import Group, Permission
-from django.contrib.contenttypes.models import ContentType
+from django.contrib.auth.models import Group, Permission  # NOQA
+from django.contrib.contenttypes.models import ContentType  # NOQA
 
-from .models import *
+from .models import *  # NOQA
