@@ -6,6 +6,8 @@ from django.contrib.auth import get_user_model
 from django.test import TransactionTestCase
 from rest_framework.test import APIClient
 
+from apibase.utils import query
+
 User = get_user_model()
 
 
@@ -62,3 +64,7 @@ class RestTestCase(TransactionTestCase):
 
     def to_json(self, data, indent=2):
         return json.dumps(data, indent=indent)
+
+    def graphql(self, path, **params):
+        gql = open(path).read()
+        return query(gql, **params)
