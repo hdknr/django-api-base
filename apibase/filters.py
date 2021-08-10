@@ -17,10 +17,13 @@ class IntFilter(django_filters.NumberFilter):
     field_class = forms.IntegerField
 
 
+SPACES = r"[\s\u3000,]+"
+
+
 class WordFilter(django_filters.CharFilter):
-    def __init__(self, *args, lookups=[], delimiters=r"[\s\u3000,]+", **kwargs):
-        self.lookups = lookups
-        self.delimiters = delimiters
+    def __init__(self, *args, lookups=None, delimiters=None, **kwargs):
+        self.lookups = lookups or []
+        self.delimiters = delimiters or SPACES
         kwargs["lookup_expr"] = kwargs.get("lookup_expr", "contains")
         super().__init__(*args, **kwargs)
 
@@ -99,3 +102,13 @@ class ListCharInFilter(django_filters.CharFilter):
 
 class MonthFromToRangeFilter(django_filters.RangeFilter):
     field_class = MonthRangeField
+
+
+class RelatedFilterSetMixin:
+    @classmethod
+    def create_related_filterset(cls, related_name):
+        fields = dict(
+            (key, instance.__class__(label=instance.label, field_name=f"{related_name}__{instance.field_name}"))
+            for key, instance in cls.declared_filters.items()
+        )
+        return type(f"RelatedFilter_{related_name}", (django_filters.FilterSet,), fields)
