@@ -1,3 +1,4 @@
+from django.conf import settings as dj_settings
 from django.utils.module_loading import import_string
 
 
@@ -39,12 +40,13 @@ class Settings(object):
         if attr not in self.defaults:
             raise AttributeError("Invalid API setting: '%s'" % attr)
 
-        try:
-            # Check if present in user settings
-            val = self.user_settings[attr]
-        except KeyError:
-            # Fall back to defaults
-            val = self.defaults[attr]
+        val = self.user_settings.get(attr, None)
+        val_default = self.defaults.get(attr, None)
+
+        if val_default and isinstance(val, dict):
+            val = {**val_default, **val}
+        else:
+            val = val or val_default
 
         # Coerce import strings into classes
         if attr in self.import_strings:
@@ -54,3 +56,11 @@ class Settings(object):
         self._cached_attrs.add(attr)
         setattr(self, attr, val)
         return val
+
+    @classmethod
+    def create(cls, name, default_tuple):
+        return cls(
+            getattr(dj_settings, name, None),
+            dict((i[0], i[1][1]) for i in default_tuple),
+            [i[0] for i in default_tuple if i[1][0]],
+        )
