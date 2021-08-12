@@ -173,6 +173,7 @@ class BaseModelSerializer(serializers.ModelSerializer):
         serializer = cls(instance=instance, data=validated_data, partial=partial)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
+            return serializer.instance
 
     def patch_children(self, instance, field_name, data):
         return data
@@ -190,6 +191,7 @@ class BaseModelSerializer(serializers.ModelSerializer):
         else:
             ser = self.fields[field_name].child
 
+        items = []
         for item in children:
             if isinstance(item, str):
                 pass
@@ -200,11 +202,16 @@ class BaseModelSerializer(serializers.ModelSerializer):
                     item[key] = item[key].id
 
             data = self.patch_children(instance, field_name, item)
-            ser.update_or_create(partial=self.partial, **data)
+            items.append(ser.update_or_create(partial=self.partial, **data))
+        return items
+
+    def update_nested_field(self, field_name, instance, validated_data, children):
+        results = self.update_nested(instance, validated_data, field_name, children)
+        return results
 
     def update_nested_fields(self, instance, validated_data, children_set):
         for field_name, children in children_set.items():
-            self.update_nested(instance, validated_data, field_name, children)
+            self.update_nested_field(field_name, instance, validated_data, children)
 
         if self.nested_fields_updateds_signal:
             self.nested_fields_updateds_signal.send(
