@@ -1,7 +1,6 @@
 import inspect
 import re
 
-from django.contrib.sites.shortcuts import get_current_site
 from django.db.models import Model
 from django.db.models.fields.reverse_related import OneToOneRel
 from django.http import QueryDict
@@ -9,30 +8,15 @@ from django.urls import reverse
 from rest_framework import exceptions, fields, serializers
 from rest_framework.fields import empty
 
-from .settings import apibase_settings
+from .urn import model_urn, rest_endpoint_from_urn
 
 
 def to_urn(instance, nss=None, nid=None):
-    opt = getattr(instance, "_meta", None)
-    if not opt:
-        return ""
-    nid = nid or apibase_settings.URN_NID
-    nss = nss or apibase_settings.URN_NSS
-    return f"urn:{nid}:{nss}:{opt.app_label}:{opt.model_name}:{instance.pk}"
+    return model_urn(instance, nss=nss, nid=nid)
 
 
 def endpoint_from_urn(urn, domain=None, nid=None, prefix="/api/rest", request=None):
-    nid = nid or apibase_settings.URN_NID
-    domain = domain or apibase_settings.DOMAIN or get_current_site(request).domain
-    ma = re.findall(r"([^:]+)", urn)
-    if len(ma) == 6 and ma[0] == "urn" and ma[1] == nid:
-        if ma[2] == "self":
-            service = ""
-        else:
-            _, domain = re.search(r"(?:([^\.]+)\.)?(.+)", domain).groups()
-            service = ma[2] + "."
-        return f"{apibase_settings.SCHEME}://{service}{domain}{prefix}/{ma[3]}/{ma[4]}/{ma[5]}/"
-    return None
+    return rest_endpoint_from_urn(urn, domain=domain, nid=nid, prefix=prefix, request=request)
 
 
 def drf_endpoint(instance, url_name=None, pk_name="pk"):
