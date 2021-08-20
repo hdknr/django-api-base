@@ -14,24 +14,30 @@ class CsvRenderer(renderers.CSVRenderer):
     pass
 
 
-class PdfRenderer(renderers.BaseRenderer):
+class BinaryRenderer(renderers.BaseRenderer):
+    def render(self, data, media_type=None, renderer_context=None):
+        return data
+
+
+class PdfRenderer(BinaryRenderer):
     media_type = "application/pdf"
     format = "pdf"
     charset = None
     render_style = "binary"
 
-    def render(self, data, media_type=None, renderer_context=None):
-        return data
 
-
-class XlsxRenderer(renderers.BaseRenderer):
+class XlsxRenderer(BinaryRenderer):
     media_type = "application/xlsx"
     format = "xlsx"
     charset = None
     render_style = "binary"
 
-    def render(self, data, media_type=None, renderer_context=None):
-        return data
+
+class ZipballRenderer(BinaryRenderer):
+    media_type = "application/zip"
+    format = "zip"
+    charset = None
+    render_style = "binary"
 
 
 RENDERERS = tuple(api_settings.DEFAULT_RENDERER_CLASSES) + (
