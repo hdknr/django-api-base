@@ -44,5 +44,6 @@ RENDERERS = tuple(api_settings.DEFAULT_RENDERER_CLASSES) + (
     CsvRenderer,
     XlsxRenderer,
     PdfRenderer,
+    ZipballRenderer,
     StaticHTMLRenderer,
 )
