@@ -107,11 +107,28 @@ class MonthFromToRangeFilter(django_filters.RangeFilter):
 class RelatedFilterSetMixin:
     @classmethod
     def create_related_filterset(cls, related_name):
-        fields = dict(
-            (
+        def _item(key, instance):
+            # TOOD: method
+            params = {}
+            if hasattr(instance, "queryset"):
+                params["queryset"] = instance.queryset
+
+            return (
                 f"{related_name}__{key}",
-                instance.__class__(label=instance.label, field_name=f"{related_name}__{instance.field_name}"),
+                instance.__class__(
+                    label=instance.label,
+                    field_name=f"{related_name}__{instance.field_name}",
+                    distinct=instance.distinct,
+                    exclude=instance.exclude,
+                    lookup_expr=instance.lookup_expr,
+                    method=instance.method,
+                    **params,
+                ),
             )
-            for key, instance in cls.declared_filters.items()
-        )
+
+        fields = {
+            **dict(_item(key, instance) for key, instance in cls.declared_filters.items()),
+            **dict(_item(key, instance) for key, instance in cls.base_filters.items()),
+        }
+
         return type(f"RelatedFilter_{related_name}", (django_filters.FilterSet,), fields)
