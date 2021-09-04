@@ -1,4 +1,5 @@
-from urllib.parse import quote
+import re
+from urllib.parse import quote, unquote
 
 import graphene
 import six
@@ -14,7 +15,7 @@ from graphql_relay.connection.arrayconnection import get_offset_with_default
 from .fields import ListCharField, MonthRangeField
 
 
-def get_filtering_args_from_filterset(filterset_class, type, obvious_filters=[]):
+def get_filtering_args_from_filterset(filterset_class, type, obvious_filters=None):
     """
     Original:
         - https://github.com/graphql-python/graphene-django/blob/master/graphene_django/filter/utils.py#L7
@@ -25,6 +26,7 @@ def get_filtering_args_from_filterset(filterset_class, type, obvious_filters=[])
     """
 
     args = {}
+    obvious_filters = obvious_filters or []
     model = filterset_class._meta.model
     for name, filter_field in six.iteritems(filterset_class.base_filters):
         form_field = None
@@ -114,3 +116,14 @@ def init_converter():
         MonthRangeField,
         lambda field: graphene.List(graphene.String, required=field.required),
     )
+
+
+def get_filename_from_header(header):
+    """ rfc6266: https://datatracker.ietf.org/doc/html/rfc6266 """
+    source = header.get("Content-Disposition", None)
+    if not source:
+        return
+
+    ma = re.search(r"filename.+utf.*8''([^;]+)", source)
+    if ma:
+        return unquote(ma.groups()[0])
