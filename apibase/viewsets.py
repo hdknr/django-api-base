@@ -117,7 +117,7 @@ class BaseModelViewSet(viewsets.ModelViewSet, ViewSetMixin):
         return context
 
     @decorators.action(methods=["get"], detail=True, url_path="(?P<field>[^/.]+)/download")
-    def download_filefield(self, request, pk, field):
+    def download_filefield(self, request, pk, format=None, field=None):
         """ download FileField file """
         instance = self.get_object()
         field = getattr(instance, field, None)
@@ -126,14 +126,16 @@ class BaseModelViewSet(viewsets.ModelViewSet, ViewSetMixin):
             disposition = utils.to_content_disposition(self.get_download_filefield_name(instance, field))
         except Exception:
             raise Http404
+        res = self.create_download_filefield_response(request, instance, field, format=format)
+        res["Content-Disposition"] = disposition
+        return res
 
-        res = static.serve(
-            self.request,
+    def create_download_filefield_response(self, request, instance, field, format=None):
+        return static.serve(
+            request,
             field.path,
             document_root="/",
         )
-        res["Content-Disposition"] = disposition
-        return res
 
     def get_download_filefield_name(self, instance, field):
         name = str(instance)
