@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from django.contrib.auth.models import Permission
+from django.http import Http404
 from django.utils.functional import cached_property
 from django.views import static
 from rest_framework import decorators, serializers, status, viewsets
@@ -121,7 +122,11 @@ class BaseModelViewSet(viewsets.ModelViewSet, ViewSetMixin):
         instance = self.get_object()
         field = getattr(instance, field, None)
 
-        disposition = utils.to_content_disposition(self.get_download_filefield_name(instance, field))
+        try:
+            disposition = utils.to_content_disposition(self.get_download_filefield_name(instance, field))
+        except Exception:
+            raise Http404
+
         res = static.serve(
             self.request,
             field.path,
