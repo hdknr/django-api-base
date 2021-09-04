@@ -22,7 +22,35 @@ class ViewSetMixin:
         ]
 
 
-class BaseModelViewSet(viewsets.ModelViewSet, ViewSetMixin):
+class DownloadMixin:
+    @decorators.action(methods=["get"], detail=True, url_path="(?P<field>[^/.]+)/download")
+    def download_filefield(self, request, pk, format=None, field=None):
+        """ download FileField file """
+        instance = self.get_object()
+        field = getattr(instance, field, None)
+
+        try:
+            disposition = utils.to_content_disposition(self.get_download_filefield_name(instance, field))
+        except Exception:
+            raise Http404
+        res = self.create_download_filefield_response(request, instance, field, format=format)
+        res["Content-Disposition"] = disposition
+        return res
+
+    def create_download_filefield_response(self, request, instance, field, format=None):
+        return static.serve(
+            request,
+            field.path,
+            document_root="/",
+        )
+
+    def get_download_filefield_name(self, instance, field):
+        name = str(instance)
+        ext = Path(field.path).suffix
+        return f"{field.field.verbose_name}.{name}{ext}"
+
+
+class BaseModelViewSet(viewsets.ModelViewSet, ViewSetMixin, DownloadMixin):
     pagination_class = paginations.Pagination
     fields_query = None
 
@@ -115,29 +143,3 @@ class BaseModelViewSet(viewsets.ModelViewSet, ViewSetMixin):
         )
 
         return context
-
-    @decorators.action(methods=["get"], detail=True, url_path="(?P<field>[^/.]+)/download")
-    def download_filefield(self, request, pk, format=None, field=None):
-        """ download FileField file """
-        instance = self.get_object()
-        field = getattr(instance, field, None)
-
-        try:
-            disposition = utils.to_content_disposition(self.get_download_filefield_name(instance, field))
-        except Exception:
-            raise Http404
-        res = self.create_download_filefield_response(request, instance, field, format=format)
-        res["Content-Disposition"] = disposition
-        return res
-
-    def create_download_filefield_response(self, request, instance, field, format=None):
-        return static.serve(
-            request,
-            field.path,
-            document_root="/",
-        )
-
-    def get_download_filefield_name(self, instance, field):
-        name = str(instance)
-        ext = Path(field.path).suffix
-        return f"{field.field.verbose_name}.{name}{ext}"
