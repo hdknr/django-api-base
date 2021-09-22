@@ -8,15 +8,31 @@ from django_filters.fields import RangeField
 from django_filters.widgets import DateRangeWidget
 
 
-class ListCharField(forms.CharField):
-    widget = SelectMultiple
+class ListFieldMixin:
+    converter = str
 
-    def to_python(self, value):
+    def to_python_value(self, value):
         if not value:
             return []
         elif not isinstance(value, (list, tuple)):
             raise ValidationError(self.error_messages["invalid_list"], code="invalid_list")
-        return [str(val) for val in value]
+        return [self.converter(val) for val in value]
+
+
+class ListCharField(forms.CharField, ListFieldMixin):
+    widget = SelectMultiple
+    converter = str
+
+    def to_python(self, value):
+        return self.to_python_value(value)
+
+
+class ListIntegerField(forms.IntegerField, ListFieldMixin):
+    widget = SelectMultiple
+    converter = int
+
+    def to_python(self, value):
+        return self.to_python_value(value)
 
 
 class MonthRangeField(RangeField):
