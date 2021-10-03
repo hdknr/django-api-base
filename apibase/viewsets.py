@@ -22,13 +22,19 @@ class ViewSetMixin:
         ]
 
 
+def static_serve(request, path, name=None, document_root="/"):
+    response = static.serve(request, path, document_root=document_root)
+    if name:
+        response["Content-Disposition"] = utils.to_content_disposition(name)
+    return response
+
+
 class DownloadMixin:
     @decorators.action(methods=["get"], detail=True, url_path="(?P<field>[^/.]+)/download")
     def download_filefield(self, request, pk, format=None, field=None):
         """ download FileField file """
         instance = self.get_object()
         field = getattr(instance, field, None)
-
         try:
             disposition = utils.to_content_disposition(self.get_download_filefield_name(instance, field))
         except Exception:
