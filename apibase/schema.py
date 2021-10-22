@@ -5,7 +5,6 @@ import graphene.relay
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import QuerySet
 from graphene.types import generic, resolver
-
 # https://docs.graphene-python.org/projects/django/en/latest/queries/
 from graphene_django.filter import DjangoFilterConnectionField
 from graphene_django.rest_framework.mutation import SerializerMutation
@@ -65,6 +64,11 @@ class NodeMixin(object):
 class NodeSet(DjangoFilterConnectionField):
     # https://github.com/graphql-python/graphene-django/issues/320#issuecomment-404802724
 
+    def __init__(self, *args, **kwargs):
+        name_prefix = kwargs.pop("name_prefix", "")
+        super().__init__(*args, **kwargs)
+        self.name_prefix = name_prefix
+
     @property
     def type(self):
         class NodeSetConnection(graphene.Connection):
@@ -74,7 +78,7 @@ class NodeSet(DjangoFilterConnectionField):
 
             class Meta:
                 node = self._type
-                name = "{}NodeSetConnection".format(self._type._meta.name)
+                name = "{}{}NodeSetConnection".format(self.name_prefix, self._type._meta.name)
 
             def resolve_total_count(self, info, **kwargs):
                 return self.length
