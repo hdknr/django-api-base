@@ -21,6 +21,10 @@ class ViewSetMixin:
             if issubclass(p, permissions.Permission) and p.PERM_CODE
         ]
 
+    @property
+    def is_safe_method(self):
+        return permissions.is_safe_method(self.request)
+
 
 def static_serve(request, path, name=None, document_root="/"):
     response = static.serve(request, path, document_root=document_root)
