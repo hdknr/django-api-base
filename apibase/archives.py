@@ -2,6 +2,7 @@ import zipfile
 from io import BytesIO
 
 from django.core import serializers
+from django.core.files.base import ContentFile
 
 
 class Zipball(object):
@@ -35,6 +36,9 @@ class Zipball(object):
         f = open(filename, "wb")
         f.write(self.read())
         f.close()
+
+    def to_contentfile(self):
+        return ContentFile(self.read())
 
 
 class ModelZipball(Zipball):
