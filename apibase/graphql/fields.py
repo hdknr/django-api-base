@@ -9,6 +9,7 @@ from graphene_django.filter import DjangoFilterConnectionField
 
 from .. import filters, utils
 from .encoders import JSONEncode
+from .connections import FilteringConnection
 
 
 class NodeSet(DjangoFilterConnectionField):
@@ -21,30 +22,10 @@ class NodeSet(DjangoFilterConnectionField):
 
     @property
     def type(self):
-        class NodeSetConnection(graphene.Connection):
-            total_count = graphene.Int()
-            records = graphene.Int()
-            summary = generic.GenericScalar()
-
+        class NodeSetConnection(FilteringConnection):
             class Meta:
                 node = self._type
                 name = "{}{}NodeSetConnection".format(self.name_prefix, self._type._meta.name)
-
-            def resolve_total_count(self, info, **kwargs):
-                return self.length
-
-            def resolve_summary(self, info, **kwargs):
-                if isinstance(self.iterable, QuerySet) and hasattr(self.iterable, "summary"):
-                    data = json.dumps(self.iterable.summary(), cls=JSONEncode)
-                    return json.loads(data)
-                return None
-
-            def resolve_records(self, info, **kwargs):
-                if isinstance(self.iterable, QuerySet):
-                    # TODO: each models may have it own countable criteria
-                    return self.iterable.order_by("id").distinct().count()
-
-                return self.length
 
         return NodeSetConnection
 
