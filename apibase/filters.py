@@ -50,6 +50,12 @@ class WordFilter(django_filters.CharFilter):
 class BaseFilter(django_filters.FilterSet):
     pk = django_filters.NumberFilter(field_name="id")
 
+    id__includes_csv = django_filters.BaseInFilter(label="ID(PK)", field_name="id", help_text="includes id set in csv")
+
+    id__excludes_csv = django_filters.BaseInFilter(
+        label="ID(PK)", field_name="id", exclude=True, help_text="exclude id set in csv"
+    )
+
     @classmethod
     def filter_for_lookup(cls, field, lookup_type):
         filter_class, param = super().filter_for_lookup(field, lookup_type)
