@@ -47,12 +47,31 @@ class WordFilter(django_filters.CharFilter):
         return qs
 
 
+class ListCharInFilter(django_filters.CharFilter):
+    field_class = ListCharField
+
+    def get_filter_predicate(self, v):
+        return {f"{self.field_name}__in": v}
+
+    def filter(self, qs, values):
+        if not values:
+            return qs
+
+        predicate = self.get_filter_predicate(values)
+        qs = self.get_method(qs)(**predicate)
+        return qs.distinct() if self.distinct else qs
+
+
+class ListIntegerInFilter(ListCharInFilter):
+    field_class = ListIntegerField
+
+
 class BaseFilter(django_filters.FilterSet):
     pk = django_filters.NumberFilter(field_name="id")
 
-    id__includes_csv = django_filters.BaseInFilter(label="ID(PK)", field_name="id", help_text="includes id set in csv")
+    id__includes = ListIntegerInFilter(label="ID(PK)", field_name="id", help_text="includes id set in csv")
 
-    id__excludes_csv = django_filters.BaseInFilter(
+    id__excludes = ListIntegerInFilter(
         label="ID(PK)", field_name="id", exclude=True, help_text="exclude id set in csv"
     )
 
@@ -91,25 +110,6 @@ class AllValuesMultipleFilter(django_filters.AllValuesMultipleFilter):
         return {f"{self.field_name}__in": v}
 
 
-class ListCharInFilter(django_filters.CharFilter):
-    field_class = ListCharField
-
-    def get_filter_predicate(self, v):
-        return {f"{self.field_name}__in": v}
-
-    def filter(self, qs, values):
-        if not values:
-            return qs
-
-        predicate = self.get_filter_predicate(values)
-        qs = self.get_method(qs)(**predicate)
-        return qs.distinct() if self.distinct else qs
-
-
-class ListIntegerInFilter(ListCharInFilter):
-    field_class = ListIntegerField
-
-
 class MonthFromToRangeFilter(django_filters.RangeFilter):
     field_class = MonthRangeField
 
@@ -145,7 +145,7 @@ def make_related_filterset(type_name, **related_filters):
         lambda a, b: {**a, **b},
         [clone_filter_fields(filter_class, prefix) for prefix, filter_class in related_filters.items()],
     )
-    return type(type_name, (django_filters.FilterSet,), fields)
+    return type(type_name, (BaseFilter,), fields)
 
 
 class RelatedFilterSetMixin:
