@@ -114,12 +114,14 @@ class MonthFromToRangeFilter(django_filters.RangeFilter):
     field_class = MonthRangeField
 
 
-def clone_filter_fields(filter_class, prefix):
+def clone_filter_fields(filter_class, prefix, fields=None, exclude=None):
     def _item(key, instance):
         # TOOD: method
         params = {}
         if hasattr(instance, "queryset"):
             params["queryset"] = instance.queryset
+        elif hasattr(instance.field, "choices"):
+            params["choices"] = instance.field.choices
 
         return (
             f"{prefix}__{key}",
