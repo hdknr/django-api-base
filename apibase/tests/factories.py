@@ -92,3 +92,7 @@ class FixtureMixin:
             return list(map(lambda i: cls.create(**{**i[model_name], **kwargs}), fixture[listkey]))
         else:
             return cls.create(**{**fixture[model_name], **kwargs})
+
+    @classmethod
+    def create_from_list(cls, items, **params):
+        return list(map(lambda i: cls.create(**params, **i), items))
