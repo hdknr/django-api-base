@@ -64,7 +64,7 @@ class FixtureMixin:
 
         if id:
             name = f"{object_name}".lower()
-            kwargs = {"object_name": object_name, "id": id}
+            kwargs = {"object_name": object_name, "id": id, **params}
             strip = False
         else:
             name = f"{object_name}_set".lower()

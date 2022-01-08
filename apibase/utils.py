@@ -90,7 +90,7 @@ def query_instance(query_string, instance=None, object_name=None, id=None, schem
     if object_name and id:
         id = to_gql_relay_id(object_name, id)
 
-    return gql_query(schema, query_string, id=id)
+    return gql_query(schema, query_string, id=id, **kwargs)
 
 
 def query(query_string, schema=None, **params):
