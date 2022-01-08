@@ -10,7 +10,7 @@ from graphql import print_ast
 
 
 def get_test_fixture(name, app_label=None, base=None):
-    """ (app_label/tests/fixtures/name)"""
+    """(app_label/tests/fixtures/name)"""
     path = Path(apps.get_app_config(app_label).path) if app_label else Path(base)
     return str(path.joinpath(f"tests/fixtures/{name}"))
 
@@ -43,14 +43,12 @@ class FixtureMixin:
     @classmethod
     def fixture(cls, name):
         app_label = cls.get_app_label()
-        model_name = cls._meta.model._meta.model_name
-        return get_test_fixture(f"{model_name}/{name}", app_label=app_label)
+        return get_test_fixture(f"{name}", app_label=app_label)
 
     @classmethod
     def load_fixture(cls, name):
         app_label = cls.get_app_label()
-        model_name = cls._meta.model._meta.model_name
-        return load_test_fixture(f"{model_name}/{name}", app_label=app_label)
+        return load_test_fixture(f"{name}", app_label=app_label)
 
     @classmethod
     def graphql_query(cls, name):
@@ -72,8 +70,7 @@ class FixtureMixin:
             name = f"{object_name}_set".lower()
             kwargs = {**params}
 
-        app_label = cls.get_app_label()
-        data = query(load_test_fixture(f"{name}.graphql", app_label=app_label), **kwargs)[name]
+        data = query(cls.load_fixture(f"{name}.graphql"), **kwargs)[name]
         return strip_relay(data) if strip else data
 
     @classmethod
