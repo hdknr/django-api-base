@@ -24,7 +24,7 @@ class LocalPathResolver:
         filename = self.construct_filename(instance, filename)
         return self.on_resolve_filename(instance, filename) or filename
 
-    def on_resolve_filename(instance, app_label, model_name, filename):
+    def on_resolve_filename(self, instance, filename):
         return None
 
     def create_path(self, filename, **kwargs):
