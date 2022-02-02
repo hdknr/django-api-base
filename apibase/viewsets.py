@@ -54,7 +54,7 @@ class DownloadMixin:
     @decorators.action(methods=["get"], detail=False, url_path=r"(?P<field>[^/\d]+)/(?P<name>[^.]+)")
     def download_filefield_path(self, request, field=None, name=None, format=None):
         path = f"{name}.{format}"
-        instance = storages.UploadPathResolver.find(self.queryset.model, field, path)
+        instance = storages.LocalPathResolver.find(self.queryset.model, field, path)
         return self.response_field_download(request, instance, field)
 
     def create_download_filefield_response(self, request, instance, field, format=None):

@@ -8,7 +8,7 @@ from django.utils.deconstruct import deconstructible
 
 
 @deconstructible
-class UploadPathResolver:
+class LocalPathResolver:
     """ file upload resolver
     """
 
