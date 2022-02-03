@@ -8,5 +8,6 @@ apibase_settings = Settings.create(
         ("HOST", (False, "self")),
         ("DOMAIN", (False, None)),
         ("SCHEME", (False, "https")),
+        ("STORAGE_PREFIX", (False, "storage")),
     ),
 )

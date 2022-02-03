@@ -6,6 +6,8 @@ from base.utils import dates
 from django.contrib.contenttypes.models import ContentType
 from django.utils.deconstruct import deconstructible
 
+from .settings import apibase_settings
+
 
 @deconstructible
 class LocalPathResolver:
@@ -39,7 +41,14 @@ class LocalPathResolver:
 
     def construct_filename(self, instance, path):
         content_type = self.resolve_content_type(instance)
-        return os.path.join(self.access, content_type.app_label, content_type.model, self.field_name, path)
+        return os.path.join(
+            self.access,
+            content_type.app_label,
+            content_type.model,
+            apibase_settings.STORAGE_PREFIX,
+            self.field_name,
+            path,
+        )
 
     def find_instance(self, model_class, path):
         query = {self.field_name: self.construct_filename(model_class(), path)}
