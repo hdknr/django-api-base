@@ -8,6 +8,7 @@ from rest_framework import decorators, serializers, status, viewsets
 from rest_framework.response import Response
 
 from . import paginations, permissions, storages, utils
+from .settings import apibase_settings
 
 
 class ViewSetMixin:
@@ -34,7 +35,23 @@ def static_serve(request, path, name=None, document_root="/"):
 
 
 class DownloadMixin:
-    def response_field_download(self, request, instance, field):
+    @decorators.action(methods=["get"], detail=True, url_path="(?P<field>[^/.]+)/download")
+    def download_filefield(self, request, pk, format=None, field=None):
+        """ download FileField file """
+        instance = self.get_object()
+        return self.response_field_data(request, instance, field)
+
+    @decorators.action(
+        methods=["get"],
+        detail=False,
+        url_path=rf"{apibase_settings.STORAGE_PREFIX}/?(?P<field>[^/\d]+)/(?P<name>[^.]+)",
+    )
+    def download_filefield_storage(self, request, field=None, name=None, format=None):
+        path = f"{name}.{format}"
+        instance = storages.LocalPathResolver.find(self.queryset.model, field, path)
+        return self.response_field_data(request, instance, field)
+
+    def response_field_data(self, request, instance, field):
         try:
             field = getattr(instance, field, None)
             disposition = utils.to_content_disposition(self.get_download_filefield_name(instance, field))
@@ -44,18 +61,6 @@ class DownloadMixin:
         res = self.create_download_filefield_response(request, instance, field, format=format)
         res["Content-Disposition"] = disposition
         return res
-
-    @decorators.action(methods=["get"], detail=True, url_path="(?P<field>[^/.]+)/download")
-    def download_filefield(self, request, pk, format=None, field=None):
-        """ download FileField file """
-        instance = self.get_object()
-        return self.response_field_download(instance, field)
-
-    @decorators.action(methods=["get"], detail=False, url_path=r"(?P<field>[^/\d]+)/(?P<name>[^.]+)")
-    def download_filefield_path(self, request, field=None, name=None, format=None):
-        path = f"{name}.{format}"
-        instance = storages.LocalPathResolver.find(self.queryset.model, field, path)
-        return self.response_field_download(request, instance, field)
 
     def create_download_filefield_response(self, request, instance, field, format=None):
         return static.serve(request, field.path, document_root="/",)
