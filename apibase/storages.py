@@ -2,8 +2,8 @@ import os
 import uuid
 from pathlib import Path
 
-from django.utils import timezone as tz
 from django.contrib.contenttypes.models import ContentType
+from django.utils import timezone as tz
 from django.utils.deconstruct import deconstructible
 
 from .settings import apibase_settings
@@ -19,17 +19,12 @@ class LocalPathResolver:
         self.access = access
         self.content_type = None
 
-    def __call__(self, instance, filename):
+    def __call__(self, instance, original_filename):
         self.content_type = self.resolve_content_type(instance)
-        #
-        filename = self.create_path(filename, instance=instance)
-        filename = self.construct_filename(instance, filename)
-        return self.on_resolve_filename(instance, filename) or filename
+        filename = self.create_path(original_filename, instance=instance)
+        return self.construct_filename(instance, filename)
 
-    def on_resolve_filename(self, instance, filename):
-        return None
-
-    def create_path(self, filename, **kwargs):
+    def create_path(self, filename, instance=None, **kwargs):
         path = Path(filename)
         today = tz.now().strftime("%Y-%m-%d")
         return "%s/%s%s" % (today, uuid.uuid4(), path.suffix)
