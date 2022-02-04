@@ -2,7 +2,7 @@ import os
 import uuid
 from pathlib import Path
 
-from base.utils import dates
+from django.utils import timezone as tz
 from django.contrib.contenttypes.models import ContentType
 from django.utils.deconstruct import deconstructible
 
@@ -31,7 +31,7 @@ class LocalPathResolver:
 
     def create_path(self, filename, **kwargs):
         path = Path(filename)
-        today = dates.now().strftime("%Y-%m-%d")
+        today = tz.now().strftime("%Y-%m-%d")
         return "%s/%s%s" % (today, uuid.uuid4(), path.suffix)
 
     def resolve_content_type(self, instance):
