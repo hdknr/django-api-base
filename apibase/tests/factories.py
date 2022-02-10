@@ -2,11 +2,12 @@ import json
 from pathlib import Path
 
 import yaml
-from apibase.utils import query
 from django.apps import apps
 from factory import fuzzy as FZ
 from gql import gql
 from graphql import print_ast
+
+from apibase.utils import query
 
 
 def get_test_fixture(name, app_label=None, base=None):
@@ -25,10 +26,18 @@ def load_test_fixture(name, app_label=None, base=None):
     return open(path).read()
 
 
-def strip_relay(data):
-    if "edges" in data:
-        return [i["node"] for i in data["edges"]]
-    return [i["node"] for i in data]
+def strip_relay(obj, recursive=False):
+    if isinstance(obj, list):
+        return [strip_relay(i, recursive=recursive) for i in obj]
+
+    if isinstance(obj, dict):
+        if "edges" in obj:
+            if not recursive:
+                return [i["node"] for i in obj["edges"]]
+            return [strip_relay(i["node"], recursive=recursive) for i in obj["edges"]]
+
+        return dict((k, strip_relay(v, recursive=recursive)) for k, v in obj.items())
+    return obj
 
 
 class FixtureMixin:
@@ -55,7 +64,7 @@ class FixtureMixin:
         return print_ast(gql(open(cls.fixture(name)).read()))
 
     @classmethod
-    def gql(cls, id=None, strip=True, **params):
+    def gql(cls, id=None, strip_recursive=False, **params):
         """
         id : app_label/tests/fixtures/{model_name}.graphql
         not id : app_label/tests/fixtures/{model_name}_set.graphql
@@ -65,13 +74,15 @@ class FixtureMixin:
         if id:
             name = f"{object_name}".lower()
             kwargs = {"object_name": object_name, "id": id, **params}
-            strip = False
         else:
             name = f"{object_name}_set".lower()
             kwargs = {**params}
 
         data = query(cls.load_fixture(f"{name}.graphql"), **kwargs)[name]
-        return strip_relay(data) if strip else data
+
+        if strip_recursive:
+            return strip_relay(data, recursive=strip_recursive)
+        return data
 
     @classmethod
     def from_json(cls, name):
