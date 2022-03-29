@@ -123,6 +123,10 @@ def clone_filter_fields(filter_class, prefix, fields=None, exclude=None):
         elif hasattr(instance.field, "choices"):
             params["choices"] = instance.field.choices
 
+        if isinstance(instance, WordFilter):
+            params["lookups"] = [f"{prefix}__{i}" for i in instance.lookups]
+            params["delimiters"] = instance.delimiters
+
         return (
             f"{prefix}__{key}",
             instance.__class__(
