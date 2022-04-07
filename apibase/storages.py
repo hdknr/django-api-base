@@ -1,7 +1,7 @@
 import os
-import uuid
 from pathlib import Path
 
+import ulid
 from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone as tz
 from django.utils.deconstruct import deconstructible
@@ -11,8 +11,7 @@ from .settings import apibase_settings
 
 @deconstructible
 class LocalPathResolver:
-    """ file upload resolver
-    """
+    """file upload resolver"""
 
     def __init__(self, field_name, access=""):
         self.field_name = field_name
@@ -27,7 +26,7 @@ class LocalPathResolver:
     def create_path(self, filename, instance=None, **kwargs):
         path = Path(filename)
         today = tz.now().strftime("%Y-%m-%d")
-        return "%s/%s%s" % (today, uuid.uuid4(), path.suffix)
+        return "%s/%s%s" % (today, ulid.new().str, path.suffix)
 
     def resolve_content_type(self, instance):
         return (
