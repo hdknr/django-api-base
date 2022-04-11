@@ -146,12 +146,13 @@ def clone_filter_fields(filter_class, prefix, fields=None, exclude=None):
     }
 
 
-def make_related_filterset(type_name, **related_filters):
+def make_related_filterset(type_name, base_filters=None, **related_filters):
+    base_filters =  base_filters or (BaseFilter, )
     fields = reduce(
         lambda a, b: {**a, **b},
         [clone_filter_fields(filter_class, prefix) for prefix, filter_class in related_filters.items()],
     )
-    return type(type_name, (BaseFilter,), fields)
+    return type(type_name, base_filters, fields)
 
 
 class RelatedFilterSetMixin:
