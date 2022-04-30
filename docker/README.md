@@ -1,0 +1,1 @@
+docker build -t $BASE_IMAGE --platform x86_64 --build-arg BASE_IMAGE=$BASE_IMAGE --build-arg TAG=$TAG --no-cache -f docker/Dockerfile .
