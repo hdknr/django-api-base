@@ -64,3 +64,4 @@ site
 bin/*.jar
 bin/schemaspy
 
+.env
