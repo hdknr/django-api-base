@@ -21,5 +21,6 @@ $ chmod +x codebuild_build.sh
 ### Exec
 
 ~~~bash
+export CODEBUILD_RUNNER=public.ecr.aws/codebuild/amazonlinux2-x86_64-standard:3.0
 ./codebuild_build.sh -c　-i $CODEBUILD_RUNNER -a /tmp/artifacts -e .env
 ~~~ 
