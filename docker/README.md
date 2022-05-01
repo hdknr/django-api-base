@@ -1,6 +1,9 @@
 ## Docker Build
 
-docker build -t $BASE_IMAGE --platform x86_64 --build-arg BASE_IMAGE=$BASE_IMAGE --build-arg TAG=$TAG --no-cache -f docker/Dockerfile .
+~~~bash
+docker build -t $APPBASE_IMAGE --platform x86_64 --build-arg BASE_IMAGE=$APPBASE_IMAGE --build-arg TAG=$TAG --no-cache -f docker/Dockerfile .
+docker build -t $TESTBASE_IMAGE --platform x86_64 --build-arg BASE_IMAGE=$TESTBASE_IMAGE --build-arg TAG=$TAG --no-cache -f docker/Dockerfile .
+~~~
 
 
 ## CodeBuild Test
@@ -8,7 +11,8 @@ docker build -t $BASE_IMAGE --platform x86_64 --build-arg BASE_IMAGE=$BASE_IMAGE
 ### Install
 
 ~~~bash
-$ docker pull public.ecr.aws/codebuild/amazonlinux2-x86_64-standard:3.0
+$ # docker pull public.ecr.aws/codebuild/amazonlinux2-x86_64-standard:3.0
+$ docker pull public.ecr.aws/codebuild/standard:5.0
 $ docker pull public.ecr.aws/codebuild/local-builds:latest
 ~~~
 
@@ -22,5 +26,7 @@ $ chmod +x codebuild_build.sh
 
 ~~~bash
 export CODEBUILD_RUNNER=public.ecr.aws/codebuild/amazonlinux2-x86_64-standard:3.0
-./codebuild_build.sh -c　-i $CODEBUILD_RUNNER -a /tmp/artifacts -e .env
+export PLATFORM=linux/amd64
+#
+./codebuild_build.sh -c -i $CODEBUILD_RUNNER -a /tmp/artifacts -e .env
 ~~~ 

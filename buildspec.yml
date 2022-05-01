@@ -1,6 +1,28 @@
 version: 0.2
 
 phases:
-  build:
+  pre_build:
+    on-failure: ABORT
     commands:
-      - docker build -t $BASE_IMAGE --platform x86_64 --build-arg BASE_IMAGE=$BASE_IMAGE --build-arg TAG=$TAG --no-cache -f docker/Dockerfile .
+      - echo "pre_build"
+    finally:
+      - echo "CODEBUILD_BUILD_SUCCEEDING is $CODEBUILD_BUILD_SUCCEEDING"
+  build:
+    on-failure: ABORT
+    commands:
+      - echo "do some testing"
+
+  post_build:
+    on-failure: ABORT
+    commands:
+      - ECR=$(aws ecr describe-repositories --repository-names $APPBASE_IMAGE | jq -r ".repositories[0].repositoryUri")
+      - echo "Logging in to the $ECR..."
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR
+      - echo ""
+      - echo "docker build -t $APPBASE_IMAGE --platform $PLATFORM --build-arg BASE_IMAGE=$ECR --build-arg TAG=$TAG --no-cache -f docker/Dockerfile ."
+      - echo "docker tag ${APPBASE_IMAGE}:${TAG} ${ECR}:${TAG}"
+      - echo "docker push ${ECR}:${TAG}"
+      - echo ""
+      - docker build -t $APPBASE_IMAGE --platform $PLATFORM --build-arg BASE_IMAGE=$ECR --build-arg TAG=$TAG --no-cache -f docker/Dockerfile .
+      - docker tag ${APPBASE_IMAGE}:${TAG} ${ECR}:${TAG}
+      - docker push ${ECR}:${TAG}
