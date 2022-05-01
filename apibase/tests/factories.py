@@ -6,7 +6,8 @@ from django.apps import apps
 from factory import fuzzy as FZ
 from gql import gql
 from graphql import print_ast
-
+from django.db.models import Max
+from django.db.models.functions import Coalesce
 from apibase.utils import query
 
 
@@ -104,3 +105,7 @@ class FixtureMixin:
     @classmethod
     def create_from_list(cls, items, **params):
         return list(map(lambda i: cls.create(**params, **i), items))
+
+    @classmethod
+    def reset_sequence_by_id(cls):
+        cls.reset_sequence(cls._meta.model.objects.aggregate(max=Coalesce(Max('id'), 0))["max"] + 1)
