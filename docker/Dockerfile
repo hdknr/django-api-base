@@ -11,7 +11,8 @@ ENV APP_BASE=/usr/src/app \
 WORKDIR ${LIB_BASE}/${NAME}
 COPY apibase ${LIB_BASE}/${NAME}/apibase
 COPY tests ${LIB_BASE}/${NAME}/tests
-COPY poetry.lock pyproject.toml  ${LIB_BASE}/${NAME}
+COPY poetry.lock ${LIB_BASE}/${NAME}/poetry.lock
+COPY pyproject.toml  ${LIB_BASE}/${NAME}/pyproject.toml
 RUN poetry install  
 
 CMD ["sleep", "infinity"]
