@@ -6,6 +6,8 @@ phases:
     on-failure: ABORT
     commands:
       - echo "pre_build"
+      - echo "Launch docker daemon in CodeBuild"
+      - bash /usr/local/bin/dockerd-entrypoint.sh
     finally:
       - echo "CODEBUILD_BUILD_SUCCEEDING is $CODEBUILD_BUILD_SUCCEEDING"
   build:
