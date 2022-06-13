@@ -117,7 +117,7 @@ class BaseModelSerializer(serializers.ModelSerializer):
         return getattr(self, "_children_set", {})
 
     def get_children(self, name):
-        return self.children_set.get(name, [])
+        return self.children_set.get(name, []) or []
 
     def to_representation(self, instance):
         """(override)"""
