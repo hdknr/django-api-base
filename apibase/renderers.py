@@ -11,7 +11,10 @@ class BrowsableAPIRendererWithoutForms(BrowsableAPIRenderer):
 
 
 class CsvRenderer(renderers.CSVRenderer):
-    pass
+    def render(self, data, media_type=None, renderer_context=None, writer_opts=None):
+        if isinstance(data, str):
+            return data
+        return super().render(data, media_type=media_type, renderer_context=renderer_context, writer_opts=writer_opts)
 
 
 class BinaryRenderer(renderers.BaseRenderer):
