@@ -114,8 +114,8 @@ class MonthFromToRangeFilter(django_filters.RangeFilter):
     field_class = MonthRangeField
 
 
-def clone_filter_fields(filter_class, prefix, fields=None, exclude=None):
-    def _item(key, instance):
+def clone_filter_fields(filter_class, prefix, distinct=None, fields=None, exclude=None):
+    def _item(key, instance, distinct=None):
         # TOOD: method
         params = {}
         if hasattr(instance, "queryset"):
@@ -127,12 +127,13 @@ def clone_filter_fields(filter_class, prefix, fields=None, exclude=None):
             params["lookups"] = [f"{prefix}__{i}" for i in instance.lookups]
             params["delimiters"] = instance.delimiters
 
+        distinct = distinct if distinct is not None else instance.distinct
         return (
             f"{prefix}__{key}",
             instance.__class__(
                 label=instance.label,
                 field_name=f"{prefix}__{instance.field_name}",
-                distinct=instance.distinct,
+                distinct=distinct,
                 exclude=instance.exclude,
                 lookup_expr=instance.lookup_expr,
                 method=instance.method,
@@ -141,16 +142,19 @@ def clone_filter_fields(filter_class, prefix, fields=None, exclude=None):
         )
 
     return {
-        **dict(_item(key, instance) for key, instance in filter_class.declared_filters.items()),
-        **dict(_item(key, instance) for key, instance in filter_class.base_filters.items()),
+        **dict(_item(key, instance, distinct=distinct) for key, instance in filter_class.declared_filters.items()),
+        **dict(_item(key, instance, distinct=distinct) for key, instance in filter_class.base_filters.items()),
     }
 
 
-def make_related_filterset(type_name, base_filters=None, **related_filters):
-    base_filters =  base_filters or (BaseFilter, )
+def make_related_filterset(type_name, distinct=True, base_filters=None, **related_filters):
+    base_filters = base_filters or (BaseFilter,)
     fields = reduce(
         lambda a, b: {**a, **b},
-        [clone_filter_fields(filter_class, prefix) for prefix, filter_class in related_filters.items()],
+        [
+            clone_filter_fields(filter_class, prefix, distinct=distinct)
+            for prefix, filter_class in related_filters.items()
+        ],
     )
     return type(type_name, base_filters, fields)
 
