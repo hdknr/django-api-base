@@ -91,6 +91,11 @@ class BaseFilter(django_filters.FilterSet):
         q = {name: int(round(value))}
         return queryset.filter(**q)
 
+    id__in_csv = django_filters.BaseInFilter(
+        label="ID",
+        field_name="id",
+    )
+
 
 class AllValuesMultipleFilter(django_filters.AllValuesMultipleFilter):
     # field_class: django_filters.fields.MultipleChoiceField
