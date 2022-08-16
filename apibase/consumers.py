@@ -1,5 +1,6 @@
-import channels_graphql_ws
 from logging import getLogger
+
+import channels_graphql_ws
 
 logger = getLogger()
 

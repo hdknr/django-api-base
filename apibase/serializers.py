@@ -1,33 +1,22 @@
-from django.urls import reverse
-from django.http import QueryDict
+import inspect
+import re
+
 from django.db.models import Model
 from django.db.models.fields.reverse_related import OneToOneRel
-from django.contrib.sites.shortcuts import get_current_site
-from rest_framework import fields, serializers, exceptions
+from django.http import QueryDict
+from django.urls import reverse
+from rest_framework import exceptions, fields, serializers
 from rest_framework.fields import empty
-from .settings import apibase_settings
-import re
-import inspect
+
+from .urn import model_urn, rest_endpoint_from_urn
 
 
 def to_urn(instance, nss=None, nid=None):
-    nid = nid or apibase_settings.URN_NID
-    nss = nss or apibase_settings.URN_NSS
-    return f"urn:{nid}:{nss}:{instance._meta.app_label}:{instance._meta.model_name}:{instance.pk}"
+    return model_urn(instance, nss=nss, nid=nid)
 
 
 def endpoint_from_urn(urn, domain=None, nid=None, prefix="/api/rest", request=None):
-    nid = nid or apibase_settings.URN_NID
-    domain = domain or apibase_settings.DOMAIN or get_current_site(request).domain
-    ma = re.findall(r"([^:]+)", urn)
-    if len(ma) == 6 and ma[0] == "urn" and ma[1] == nid:
-        if ma[2] == "self":
-            service = ""
-        else:
-            _, domain = re.search(r"(?:([^\.]+)\.)?(.+)", domain).groups()
-            service = ma[2] + "."
-        return f"{apibase_settings.SCHEME}://{service}{domain}{prefix}/{ma[3]}/{ma[4]}/{ma[5]}/"
-    return None
+    return rest_endpoint_from_urn(urn, domain=domain, nid=nid, prefix=prefix, request=request)
 
 
 def drf_endpoint(instance, url_name=None, pk_name="pk"):
@@ -35,12 +24,9 @@ def drf_endpoint(instance, url_name=None, pk_name="pk"):
     try:
         if hasattr(instance, "get_endpoint_url"):
             return instance.get_endpoint_url()
-        name = (
-            url_name
-            or f"api-{instance._meta.app_label}-{instance._meta.model_name}-detail"
-        )
+        name = url_name or f"api-{instance._meta.app_label}-{instance._meta.model_name}-detail"
         return reverse(name, kwargs={pk_name: instance.pk})
-    except:
+    except Exception:
         pass
     return ""
 
@@ -102,13 +88,19 @@ class BaseModelSerializer(serializers.ModelSerializer):
         super().__init__(instance=instance, data=data, **kwargs)
         self._actions = dict((k, v(self)) for k, v in self.action_handlers.items())
 
-    def _validate_for_action(self):
-        validator = self._actions.get(self.view_action, None)
-        validator and validator.validate()
+    def _get_action(self, name):
+        action = self._actions.get(name, None) or self._actions.get("*", None)
+        return action
 
-    def _dispatch_for_action(self):
-        validator = self._actions.get(self.view_action, None)
-        validator and validator.dispatch()
+    def _validate_for_action(self):
+        action = self._get_action(self.view_action)
+        action and action.validate()
+
+    def _save_for_action(self):
+        action = self._get_action(self.view_action)
+        if action:
+            return action.save(super())
+        return super().save()
 
     def is_valid(self, raise_exception=False):
         """(override)"""
@@ -118,16 +110,14 @@ class BaseModelSerializer(serializers.ModelSerializer):
 
     def save(self, **kwargs):
         """(override)"""
-        res = super().save()
-        self._dispatch_for_action()
-        return res
+        return self._save_for_action(**kwargs)
 
     @property
     def children_set(self):
         return getattr(self, "_children_set", {})
 
     def get_children(self, name):
-        return self.children_set.get(name, [])
+        return self.children_set.get(name, []) or []
 
     def to_representation(self, instance):
         """(override)"""
@@ -157,9 +147,7 @@ class BaseModelSerializer(serializers.ModelSerializer):
         if self.nested_fields:
             if isinstance(data, QueryDict):
                 return self.run_validation_querydict(data=data)
-            self._children_set = dict(
-                (i, data.pop(i, None)) for i in self.nested_fields
-            )
+            self._children_set = dict((i, data.pop(i, None)) for i in self.nested_fields)
 
         return super().run_validation(data=data)
 
@@ -169,6 +157,7 @@ class BaseModelSerializer(serializers.ModelSerializer):
         serializer = cls(instance=instance, data=validated_data, partial=partial)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
+            return serializer.instance
 
     def patch_children(self, instance, field_name, data):
         return data
@@ -186,6 +175,7 @@ class BaseModelSerializer(serializers.ModelSerializer):
         else:
             ser = self.fields[field_name].child
 
+        items = []
         for item in children:
             if isinstance(item, str):
                 pass
@@ -196,11 +186,16 @@ class BaseModelSerializer(serializers.ModelSerializer):
                     item[key] = item[key].id
 
             data = self.patch_children(instance, field_name, item)
-            ser.update_or_create(partial=self.partial, **data)
+            items.append(ser.update_or_create(partial=self.partial, **data))
+        return items
+
+    def update_nested_field(self, field_name, instance, validated_data, children):
+        results = self.update_nested(instance, validated_data, field_name, children)
+        return results
 
     def update_nested_fields(self, instance, validated_data, children_set):
         for field_name, children in children_set.items():
-            self.update_nested(instance, validated_data, field_name, children)
+            self.update_nested_field(field_name, instance, validated_data, children)
 
         if self.nested_fields_updateds_signal:
             self.nested_fields_updateds_signal.send(
@@ -210,9 +205,7 @@ class BaseModelSerializer(serializers.ModelSerializer):
 
     def validated_children_set(self, validated_data):
         children_set = getattr(self, "_children_set", [])
-        children_set = children_set or dict(
-            (i, validated_data.pop(i, [])) for i in self.nested_fields
-        )
+        children_set = children_set or dict((i, validated_data.pop(i, [])) for i in self.nested_fields)
         return children_set
 
     def update(self, instance, validated_data):
@@ -244,9 +237,7 @@ class BatchSerializerMixin:
     def to_internal_value(self, data):
         ret = super().to_internal_value(data)
         id_attr = getattr(self.Meta, "update_lookup_field", "id")
-        request_method = getattr(
-            getattr(self.context.get("view"), "request"), "method", ""
-        )
+        request_method = getattr(getattr(self.context.get("view"), "request"), "method", "")
 
         if all(
             (

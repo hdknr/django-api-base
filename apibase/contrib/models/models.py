@@ -1,6 +1,6 @@
-from django.contrib.auth import get_user_model as USER, get_backends
-from . import methods
+from django.contrib.auth import get_user_model as USER
 
+from . import methods
 
 User = USER()
 

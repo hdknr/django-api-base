@@ -64,3 +64,5 @@ site
 bin/*.jar
 bin/schemaspy
 
+.env
+codebuild_build.sh
