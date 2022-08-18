@@ -54,3 +54,10 @@ class MonthRangeField(RangeField):
         if data:
             return slice(*data)
         return None
+
+
+class CharRangeField(RangeField):
+    def __init__(self, fields=None, *args, **kwargs):
+        if fields is None:
+            fields = (forms.CharField(), forms.CharField())
+        super().__init__(fields, *args, **kwargs)
