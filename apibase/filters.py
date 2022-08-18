@@ -10,7 +10,7 @@ import jaconv
 from django import forms
 from django.db.models import IntegerField, Q
 
-from .fields import ListCharField, ListIntegerField, MonthRangeField
+from .fields import CharRangeField, ListCharField, ListIntegerField, MonthRangeField
 
 
 class IntFilter(django_filters.NumberFilter):
@@ -169,3 +169,16 @@ class RelatedFilterSetMixin:
     def create_related_filterset(cls, related_name):
         fields = clone_filter_fields(cls, related_name)
         return type(f"RelatedFilter_{related_name}", (django_filters.FilterSet,), fields)
+
+
+class CharRangeFilter(django_filters.Filter):
+    field_class = CharRangeField
+
+    def filter(self, qs, value):
+        if not value.start and not value.stop:
+            return qs
+
+        q0 = value.start and Q(**{f"{self.field_name}__gte": value.start}) or Q()
+        q1 = value.stop and Q(**{f"{self.field_name}__lte": value.stop}) or Q()
+
+        return self.get_method(self.distinct and qs.distinct() or qs)(q0 & q1)
