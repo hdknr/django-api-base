@@ -175,7 +175,7 @@ class CharRangeFilter(django_filters.Filter):
     field_class = CharRangeField
 
     def filter(self, qs, value):
-        if not value.start and not value.stop:
+        if not value or (not value.start and not value.stop):
             return qs
 
         q0 = value.start and Q(**{f"{self.field_name}__gte": value.start}) or Q()
