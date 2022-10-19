@@ -119,7 +119,7 @@ def init_converter():
 
     convert_form_field.register(
         MonthRangeField,
-        lambda field: graphene.List(graphene.String, required=field.required),
+        lambda field: graphene.String(required=field.required),
     )
 
 
