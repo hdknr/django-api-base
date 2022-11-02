@@ -5,7 +5,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.forms.widgets import SelectMultiple
 from django_filters.fields import RangeField
-from django_filters.widgets import DateRangeWidget
+from django_filters.widgets import SuffixedMultiWidget
 
 
 class ListFieldMixin:
@@ -35,8 +35,27 @@ class ListIntegerField(forms.IntegerField, ListFieldMixin):
         return self.to_python_value(value)
 
 
-class MonthRangeField(RangeField):
-    widget = DateRangeWidget
+class CharRangeField(RangeField):
+    def __init__(self, fields=None, *args, **kwargs):
+        if fields is None:
+            fields = (forms.CharField(), forms.CharField())
+        super().__init__(fields, *args, **kwargs)
+
+
+class CharRangeWidget(SuffixedMultiWidget):
+    suffixes = ["after", "before"]
+
+    def __init__(self, attrs=None):
+        widgets = (forms.TextInput, forms.TextInput)
+        super().__init__(widgets, attrs)
+
+    def value_from_datadict(self, data, files, name):
+        res = super().value_from_datadict(data, files, name)
+        return [isinstance(i, list) and i[0] or i for i in res]
+
+
+class MonthRangeField(CharRangeField):
+    widget = CharRangeWidget
 
     def to_date(self, value, last=False):
         if value:
@@ -54,10 +73,3 @@ class MonthRangeField(RangeField):
         if data:
             return slice(*data)
         return None
-
-
-class CharRangeField(RangeField):
-    def __init__(self, fields=None, *args, **kwargs):
-        if fields is None:
-            fields = (forms.CharField(), forms.CharField())
-        super().__init__(fields, *args, **kwargs)

@@ -171,11 +171,11 @@ class RelatedFilterSetMixin:
         return type(f"RelatedFilter_{related_name}", (django_filters.FilterSet,), fields)
 
 
-class CharRangeFilter(django_filters.Filter):
+class CharRangeFilter(django_filters.RangeFilter):
     field_class = CharRangeField
 
     def filter(self, qs, value):
-        if not value.start and not value.stop:
+        if not value or (not value.start and not value.stop):
             return qs
 
         q0 = value.start and Q(**{f"{self.field_name}__gte": value.start}) or Q()

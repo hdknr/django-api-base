@@ -9,6 +9,7 @@ from graphql import print_ast
 from django.db.models import Max
 from django.db.models.functions import Coalesce
 from apibase.utils import query
+from apibase.graphql.utils import strip_relay
 
 
 def get_test_fixture(name, app_label=None, base=None):
@@ -25,20 +26,6 @@ def load_test_fixture(name, app_label=None, base=None):
     elif suffix in [".yml", ".yaml"]:
         return yaml.load(open(path), Loader=yaml.FullLoader)
     return open(path).read()
-
-
-def strip_relay(obj, recursive=False):
-    if isinstance(obj, list):
-        return [strip_relay(i, recursive=recursive) for i in obj]
-
-    if isinstance(obj, dict):
-        if "edges" in obj:
-            if not recursive:
-                return [i["node"] for i in obj["edges"]]
-            return [strip_relay(i["node"], recursive=recursive) for i in obj["edges"]]
-
-        return dict((k, strip_relay(v, recursive=recursive)) for k, v in obj.items())
-    return obj
 
 
 class FixtureMixin:

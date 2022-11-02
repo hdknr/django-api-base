@@ -9,6 +9,10 @@ from rest_framework.response import Response
 
 from . import paginations, permissions, storages, utils
 from .settings import apibase_settings
+from logging import getLogger
+
+
+logger = getLogger()
 
 
 class ViewSetMixin:
@@ -55,7 +59,8 @@ class DownloadMixin:
         try:
             field = getattr(instance, field, None)
             disposition = utils.to_content_disposition(self.get_download_filefield_name(instance, field))
-        except Exception:
+        except Exception as e:
+            logger.error(f"DownloadMixin.response_field_data:{e}")
             raise Http404
 
         res = self.create_download_filefield_response(request, instance, field, format=format)
@@ -63,7 +68,11 @@ class DownloadMixin:
         return res
 
     def create_download_filefield_response(self, request, instance, field, format=None):
-        return static.serve(request, field.path, document_root="/",)
+        return static.serve(
+            request,
+            field.path,
+            document_root="/",
+        )
 
     def get_download_filefield_name(self, instance, field):
         name = str(instance)
@@ -104,7 +113,10 @@ class BaseModelViewSet(viewsets.ModelViewSet, ViewSetMixin, DownloadMixin):
     def update_batch(self, request, *args, **kwargs):
         partial = kwargs.pop("partial", False)
         serializer = self.get_serializer(
-            self.filter_queryset(self.get_queryset()), data=request.data, many=True, partial=partial,
+            self.filter_queryset(self.get_queryset()),
+            data=request.data,
+            many=True,
+            partial=partial,
         )
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
