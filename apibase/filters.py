@@ -96,6 +96,12 @@ class BaseFilter(django_filters.FilterSet):
         field_name="id",
     )
 
+    id__not_in_csv = django_filters.BaseInFilter(
+        label="ID",
+        field_name="id",
+        exclude=True,
+    )
+
 
 class AllValuesMultipleFilter(django_filters.AllValuesMultipleFilter):
     # field_class: django_filters.fields.MultipleChoiceField
