@@ -37,6 +37,9 @@ def query_model(
         - query.graphql:  id is specifiled
         - query_set.graphql: id is not specified
     """
+    opt = model_or_instance._meta
+    object_name = object_name or opt.object_name
+
     source = query_model_file(
         model_or_instance, name=name, object_name=object_name, id=id, **params
     )
