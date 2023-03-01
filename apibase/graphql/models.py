@@ -39,6 +39,7 @@ def query_model(
     """
     opt = model_or_instance._meta
     object_name = object_name or opt.object_name
+    id = id or (isinstance(model_or_instance, opt.model) and model_or_instance.id)
 
     source = query_model_file(
         model_or_instance, name=name, object_name=object_name, id=id, **params
