@@ -37,6 +37,11 @@ def query_model(
         - query.graphql:  id is specifiled
         - query_set.graphql: id is not specified
     """
+    if isinstance(model_or_instance, str):
+        model_or_instance = ContentType.objects.get_by_natural_key(
+            *model_or_instance.split(".")
+        ).model_class()
+
     opt = model_or_instance._meta
     object_name = object_name or opt.object_name
     id = id or (isinstance(model_or_instance, opt.model) and model_or_instance.id)
@@ -50,6 +55,11 @@ def query_model(
 
 
 def query_params(model_or_instance, name=None, object_name=None, id=None, **params):
+    if isinstance(model_or_instance, str):
+        model_or_instance = ContentType.objects.get_by_natural_key(
+            *model_or_instance.split(".")
+        ).model_class()
+
     source = query_model_file(
         model_or_instance, name=name, object_name=object_name, id=id, **params
     )
