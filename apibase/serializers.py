@@ -164,7 +164,7 @@ class BaseModelSerializer(serializers.ModelSerializer):
 
     def update_nested(self, instance, validated_data, field_name, children):
         if not children or not instance:
-            return
+            return []
 
         name = re.sub(r"(.+)(_set)$", r"\g<1>", field_name)
         related_field = self.Meta.model._meta.get_field(name)
