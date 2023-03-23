@@ -20,7 +20,7 @@ def endpoint_from_urn(urn, domain=None, nid=None, prefix="/api/rest", request=No
 
 
 def drf_endpoint(instance, url_name=None, pk_name="pk"):
-    """ DRF endpoint """
+    """DRF endpoint"""
     try:
         if hasattr(instance, "get_endpoint_url"):
             return instance.get_endpoint_url()
@@ -152,9 +152,9 @@ class BaseModelSerializer(serializers.ModelSerializer):
         return super().run_validation(data=data)
 
     @classmethod
-    def update_or_create(cls, partial=None, id=None, **validated_data):
+    def update_or_create(cls, partial=None, id=None, context=None, **validated_data):
         instance = id and cls.Meta.model.objects.filter(id=id).first()
-        serializer = cls(instance=instance, data=validated_data, partial=partial)
+        serializer = cls(instance=instance, data=validated_data, partial=partial, context=context)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             return serializer.instance
@@ -186,7 +186,7 @@ class BaseModelSerializer(serializers.ModelSerializer):
                     item[key] = item[key].id
 
             data = self.patch_children(instance, field_name, item)
-            items.append(ser.update_or_create(partial=self.partial, **data))
+            items.append(ser.update_or_create(partial=self.partial, context=self.context, **data))
         return items
 
     def update_nested_field(self, field_name, instance, validated_data, children):
