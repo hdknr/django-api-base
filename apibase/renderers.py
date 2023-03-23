@@ -43,10 +43,21 @@ class ZipballRenderer(BinaryRenderer):
     render_style = "binary"
 
 
+class TsvRenderer(renderers.BaseRenderer):
+    media_type = "text/tab-separated-values"
+    format = "tsv"
+    charset = "utf-8"
+    render_style = "text"
+
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        return data
+
+
 RENDERERS = tuple(api_settings.DEFAULT_RENDERER_CLASSES) + (
     CsvRenderer,
     XlsxRenderer,
     PdfRenderer,
     ZipballRenderer,
     StaticHTMLRenderer,
+    TsvRenderer,
 )
