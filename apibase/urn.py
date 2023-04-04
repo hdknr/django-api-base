@@ -42,6 +42,8 @@ def rest_endpoint_from_urn(urn, domain=None, nid=None, prefix="/api/rest", reque
         else:
             service = urn_dict["nss"] + "."
 
+        others = urn_dict["others"] and ("/".join(urn_dict["others"]) + "/") or ""
+
         return URL_FORMAT.format(
             scheme=apibase_settings.SCHEME,
             service=service,
@@ -49,6 +51,6 @@ def rest_endpoint_from_urn(urn, domain=None, nid=None, prefix="/api/rest", reque
             prefix=prefix,
             app_label=urn_dict["app_label"],
             model_name=urn_dict["model_name"],
-            others="/".join(urn_dict["others"]) + "/",
+            others=others,
         )
     return None
