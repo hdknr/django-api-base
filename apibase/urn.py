@@ -27,14 +27,19 @@ def parse_urn(urn, prefix="urn", nid=None):
 
 
 def rest_endpoint_from_urn(urn, domain=None, nid=None, prefix="/api/rest", request=None):
+    if not domain:
+        if apibase_settings.DOMAIN:
+            domain = apibase_settings.DOMAIN
+        else:
+            domain = get_current_site(request).domain
+            _, domain = re.search(r"(?:([^\.]+)\.)?(.+)", domain).groups()
+
     nid = nid or apibase_settings.URN_NID
-    domain = domain or apibase_settings.DOMAIN or get_current_site(request).domain
     urn_dict = parse_urn(urn, nid=nid)
     if urn_dict:
         if urn_dict["nss"] == "self":
             service = ""
         else:
-            _, domain = re.search(r"(?:([^\.]+)\.)?(.+)", domain).groups()
             service = urn_dict["nss"] + "."
 
         return URL_FORMAT.format(
