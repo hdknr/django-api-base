@@ -13,6 +13,8 @@ from .settings import apibase_settings
 class LocalPathResolver:
     """file upload resolver"""
 
+    RESOLVE_CONTNT_TYPE = True
+
     def __init__(self, field_name, access=""):
         self.field_name = field_name
         self.access = access
@@ -29,9 +31,11 @@ class LocalPathResolver:
         return "%s/%s%s" % (today, ulid.new().str, path.suffix)
 
     def resolve_content_type(self, instance):
-        return (
-            self.content_type or getattr(instance, "content_type", None) or ContentType.objects.get_for_model(instance)
-        )
+        content_type = ContentType.objects.get_for_model(instance)
+        if not self.RESOLVE_CONTNT_TYPE:
+            return content_type
+
+        return self.content_type or getattr(instance, "content_type", None) or content_type
 
     def construct_filename(self, instance, path):
         content_type = self.resolve_content_type(instance)
