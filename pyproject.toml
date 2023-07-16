@@ -17,6 +17,7 @@ jaconv = "^0.2.4"
 djangorestframework-csv = "^2.1.0"
 factory-boy = "^3.2.1"
 ulid-py = "^1.1.0"
+urllib3 = "1.26.16"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
