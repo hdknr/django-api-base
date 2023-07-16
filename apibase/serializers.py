@@ -184,9 +184,7 @@ class BaseModelSerializer(serializers.ModelSerializer):
                 related_field.content_type_field_name: ContentType.objects.get_for_model(instance),
             }
         else:
-            defaults = {
-                remote_field_name: instance.id
-            }
+            defaults = {remote_field_name: instance.id}
 
         items = []
         for item in children:

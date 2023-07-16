@@ -41,7 +41,7 @@ def static_serve(request, path, name=None, document_root="/"):
 class DownloadMixin:
     @decorators.action(methods=["get"], detail=True, url_path="(?P<field>[^/.]+)/download")
     def download_filefield(self, request, pk, format=None, field=None):
-        """ download FileField file """
+        """download FileField file"""
         instance = self.get_object()
         return self.response_field_data(request, instance, field)
 

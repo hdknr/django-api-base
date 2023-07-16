@@ -5,7 +5,7 @@ description = ""
 authors = ["user.name <gmail@hdknr.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
 graphene-django = "^2.10.1"
 django-cors-headers = "^3.3.0"
 djangorestframework-filters = {git = "https://github.com/philipn/django-rest-framework-filters.git"}
