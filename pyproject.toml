@@ -5,7 +5,7 @@ description = ""
 authors = ["user.name <gmail@hdknr.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
 graphene-django = "^2.10.1"
 django-cors-headers = "^3.3.0"
 djangorestframework-filters = {git = "https://github.com/philipn/django-rest-framework-filters.git"}
@@ -13,14 +13,15 @@ django-filter = "^2.2.0"
 djangorestframework = "^3.11.0"
 gql = "^2.0.0"
 django-channels-graphql-ws = "^0.7.4"
-jaconv = "^0.2.4"
+jaconv = "^0.3.4"
 djangorestframework-csv = "^2.1.0"
 factory-boy = "^3.2.1"
 ulid-py = "^1.1.0"
+urllib3 = "^1.26.16"
 
 [tool.poetry.dev-dependencies]
-pytest = "^5.2"
-isort = "5.1.4"
+pytest = "^7.0.0"
+isort = "^5.0.0"
 black = "20.8b"
 flake8-black = "^0.2.3"
 flake8 = "^3.9.2"

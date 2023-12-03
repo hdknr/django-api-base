@@ -10,6 +10,7 @@ from django.db.models import Max
 from django.db.models.functions import Coalesce
 from apibase.utils import query
 from apibase.graphql.utils import strip_relay
+from django.contrib.contenttypes.models import ContentType
 
 
 def get_test_fixture(name, app_label=None, base=None):
@@ -79,6 +80,10 @@ class FixtureMixin:
     @classmethod
     def qs(cls):
         return cls._meta.model.objects
+
+    @classmethod
+    def contenttype(cls):
+        return ContentType.objects.get_for_model(cls._meta.model)
 
     @classmethod
     def from_fixture(cls, name, listkey="items", **kwargs):

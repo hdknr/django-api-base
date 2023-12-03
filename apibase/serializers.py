@@ -3,12 +3,14 @@ import re
 
 from django.db.models import Model
 from django.db.models.fields.reverse_related import OneToOneRel
+from django.contrib.contenttypes.fields import GenericRelation
 from django.http import QueryDict
 from django.urls import reverse
 from rest_framework import exceptions, fields, serializers
 from rest_framework.fields import empty
 
 from .urn import model_urn, rest_endpoint_from_urn
+from django.contrib.contenttypes.models import ContentType
 
 
 def to_urn(instance, nss=None, nid=None):
@@ -169,17 +171,26 @@ class BaseModelSerializer(serializers.ModelSerializer):
         name = re.sub(r"(.+)(_set)$", r"\g<1>", field_name)
         related_field = self.Meta.model._meta.get_field(name)
         remote_field_name = related_field.remote_field.name
+
         if isinstance(related_field, OneToOneRel):
             children = [children]
             ser = self.fields[field_name]
         else:
             ser = self.fields[field_name].child
 
+        if isinstance(related_field, GenericRelation):
+            defaults = {
+                related_field.object_id_field_name: instance.id,
+                related_field.content_type_field_name: ContentType.objects.get_for_model(instance),
+            }
+        else:
+            defaults = {remote_field_name: instance.id}
+
         items = []
         for item in children:
             if isinstance(item, str):
                 pass
-            item[remote_field_name] = instance.id
+            item.update(defaults)
             for key in item:
                 if isinstance(item[key], Model):
                     # prevent serilizer.is_valid() -> False

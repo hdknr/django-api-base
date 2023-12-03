@@ -41,17 +41,17 @@ def static_serve(request, path, name=None, document_root="/"):
 class DownloadMixin:
     @decorators.action(methods=["get"], detail=True, url_path="(?P<field>[^/.]+)/download")
     def download_filefield(self, request, pk, format=None, field=None):
-        """ download FileField file """
+        """download FileField file"""
         instance = self.get_object()
         return self.response_field_data(request, instance, field)
 
     @decorators.action(
         methods=["get"],
         detail=False,
-        url_path=rf"{apibase_settings.STORAGE_PREFIX}/?(?P<field>[^/\d]+)/(?P<name>[^.]+)",
+        url_path=rf"{apibase_settings.STORAGE_PREFIX}/?(?P<field>[^/\d]+)/(?P<name>.+)",
     )
     def download_filefield_storage(self, request, field=None, name=None, format=None):
-        path = f"{name}.{format}"
+        path = f"{name}.{format}" if format else name
         instance = storages.LocalPathResolver.find(self.queryset.model, field, path)
         return self.response_field_data(request, instance, field)
 
